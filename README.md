@@ -15,6 +15,7 @@ Codex 通常使用 ~/.codex/skills，其他代理依其支援的 SKILL.md 載入
 Windows 範例，若目的地已存在，先比較內容再更新。
 
 ```powershell
+New-Item -ItemType Directory -Path "$env:USERPROFILE\.codex\skills" -Force | Out-Null
 Copy-Item -LiteralPath .\skills\local-first-project -Destination "$env:USERPROFILE\.codex\skills\local-first-project" -Recurse
 ```
 
@@ -28,10 +29,15 @@ Copy-Item -LiteralPath .\skills\local-first-project -Destination "$env:USERPROFI
 
 本專案不含個人對話、私人路徑或憑證。發布前請執行 tests/validate.py，並參考 tests/scenarios.md 做行為驗收。
 驗證器檢查封裝與必要規則，不能證明代理在所有桌面環境都會正確執行。
-GitHub 發布步驟見 docs/PUBLISH.md。對外授權條款由作者選定後加入 LICENSE。
+GitHub 發布步驟見 docs/PUBLISH.md。本專案採 MIT 授權，詳見 [LICENSE](LICENSE)。
 
 ## 檔案
 
 - skills/local-first-project/SKILL.md 是技能入口。
 - references/ 包含發現、補足、桌面操作與驗收指南。
 - tests/ 包含靜態驗證器與行為測試情境。
+
+執行封裝檢查與回歸測試（Python 3，僅使用標準函式庫）。
+
+    python tests/validate.py
+    python tests/test_package.py

@@ -24,3 +24,9 @@ skill-creator quick_validate.py 回報 Skill is valid!。
 
 上述為本次 Windows 環境的實測。tests/scenarios.md 是回歸情境規格，尚未完成全套獨立代理測試。
 跨平台說明尚未在 macOS 或 Linux 實機驗證。靜態規則通過不代表代理必然遵守每項行為。
+
+## 封裝回歸測試
+
+tests/test_package.py 使用暫存副本，測試正常封裝、遺失參考文件、錯誤 frontmatter、私人路徑、缺少發現規則，以及 Python -O 模式。
+測試先揭露 assert 在 -O 下不執行的問題，改成明確錯誤檢查後六項測試通過。
+這六項測試驗證封裝檢查器，與獨立代理的行為測試有不同的驗收範圍。

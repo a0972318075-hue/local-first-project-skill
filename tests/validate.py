@@ -3,26 +3,37 @@ import re
 
 root = Path(__file__).resolve().parents[1]
 skill = root / "skills/local-first-project/SKILL.md"
-assert skill.is_file(), "Missing SKILL.md"
+if not (skill.is_file()):
+    raise ValueError("Missing SKILL.md")
 body = skill.read_text(encoding="utf-8-sig")
-assert body.startswith("---\nname: local-first-project\n"), "Invalid frontmatter"
-assert "\ndescription:" in body.split("---", 2)[1]
+if not (body.startswith("---\nname: local-first-project\n")):
+    raise ValueError("Invalid frontmatter")
+if "\ndescription:" not in body.split("---", 2)[1]:
+    raise ValueError("Missing description")
 for link in re.findall(r"\]\((references/[^)]+)\)", body):
-    assert (skill.parent / link).is_file(), f"Broken reference {link}"
+    if not ((skill.parent / link).is_file()):
+        raise ValueError(f"Broken reference {link}")
 for rule in ("unknown", "missing-after-search", "重新開啟", "授權", "真實功能測試"):
     combined = body + (skill.parent / "references/checklist.md").read_text(encoding="utf-8-sig")
-    assert rule in combined, f"Missing rule {rule}"
+    if not (rule in combined):
+        raise ValueError(f"Missing rule {rule}")
 files = list(root.rglob("*.md"))
 for file in files:
     text = file.read_text(encoding="utf-8-sig")
-    assert len(text.splitlines()) < 500, f"Too long {file}"
-    assert "C:/Users/AIO" not in text, f"Personal path {file}"
-    assert "\ufffd" not in text, f"Encoding issue {file}"
-assert (root / "tests/scenarios.md").read_text(encoding="utf-8-sig").count("|") > 30
+    if not (len(text.splitlines()) < 500):
+        raise ValueError(f"Too long {file}")
+    if not ("C:/Users/AIO" not in text):
+        raise ValueError(f"Personal path {file}")
+    if not ("\ufffd" not in text):
+        raise ValueError(f"Encoding issue {file}")
+if not ((root / "tests/scenarios.md").read_text(encoding="utf-8-sig").count("|") > 30):
+    raise ValueError("Missing scenario coverage")
 print(f"PASS: {len(files)} Markdown files; metadata, references, rules, size and portability")
 
 discovery = (skill.parent / "references/discovery.md").read_text(encoding="utf-8-sig")
 for rule in ("提交身分", "瀏覽器", "證據表", "尚未檢查", "GitHub Desktop"):
-    assert rule in discovery, f"Missing discovery gate: {rule}"
-assert (skill.parent / "references/git.md").is_file(), "Missing Git recovery guide"
+    if not (rule in discovery):
+        raise ValueError(f"Missing discovery gate: {rule}")
+if not ((skill.parent / "references/git.md").is_file()):
+    raise ValueError("Missing Git recovery guide")
 print("PASS: discovery gates and Git recovery guide")
