@@ -43,6 +43,16 @@ class DesktopGuardTests(unittest.TestCase):
         self.assertEqual(self.check(modal_window_id='dialog'), 'resolve-modal')
         self.assertEqual(self.check(modal_window_id='w1'), 'ready-for-dispatch')
 
+    def test_nested_modal_blocks_same_window_background_target(self):
+        self.assertEqual(self.check(modal_window_id='w1', modal_surface_id='dialog-ref',
+                                    target_surface_id='editor-ref'), 'resolve-modal')
+        self.assertEqual(self.check(modal_window_id='w1', modal_surface_id='dialog-ref',
+                                    target_surface_id='dialog-ref'), 'ready-for-dispatch')
+
+    def test_partial_surface_identity_is_invalid(self):
+        with self.assertRaises(ValueError):
+            self.check(modal_surface_id='dialog-ref')
+
     def test_ambiguous_target_requires_observation(self):
         self.assertEqual(self.check(matches=2), 'observe')
         self.assertEqual(self.check(matches=0), 'observe')

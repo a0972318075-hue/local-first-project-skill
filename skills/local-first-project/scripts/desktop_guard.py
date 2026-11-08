@@ -21,6 +21,11 @@ def evaluate(state):
     require('modal_window_id' in state and
             (state['modal_window_id'] is None or text(state['modal_window_id'])),
             'modal_window_id must be null or a window id')
+    if 'modal_surface_id' in state or 'target_surface_id' in state:
+        require(text(state.get('target_surface_id')), 'target_surface_id required')
+        require('modal_surface_id' in state and
+                (state['modal_surface_id'] is None or text(state['modal_surface_id'])),
+                'modal_surface_id must be null or a surface id')
     require(state.get('delivery') in ('semantic', 'physical'), 'invalid delivery')
     require(state.get('permission') in ('granted', 'not-required', 'denied', 'unknown'),
             'invalid permission')
@@ -51,6 +56,8 @@ def evaluate(state):
         return result('observe', 'Refresh target identity, current snapshot and actionable state')
     if state['modal_window_id'] not in (None, state['target_window_id']):
         return result('resolve-modal', 'Inspect the blocking dialog and choose an authorized action')
+    if state.get('modal_surface_id') not in (None, state.get('target_surface_id')):
+        return result('resolve-modal', 'Target is outside the active modal surface')
     if state['delivery'] == 'physical' and not state['focused']:
         return result('focus-and-observe', 'Confirm foreground and input focus before physical input')
     return result('ready-for-dispatch', 'Recheck in the adapter at dispatch; verify outcome afterward')
