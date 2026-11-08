@@ -2,6 +2,25 @@
 
 日期 2026-11-08。
 
+## 0.3.0 桌面控制驗證
+
+新增 desktop_guard.py 及 13 個測試，涵蓋語意／實體輸入焦點、過期定位、錯誤視窗、唯一性、模態遮擋、送達不明、已完成動作、權限、使用者介入、不可操作目標、輸入型別、安全重試與 CLI 結束碼。
+先執行缺少實作的測試，再完成檢查器；額外測試抓到 not-delivered 未要求 retry_safe 的缺口，修正後通過。
+
+```text
+Ran 43 tests in 21.755s
+OK
+PASS: 12 Markdown files; metadata, local links, required text, size and Windows user-path check
+PASS: discovery gates and Git recovery guide
+```
+
+本機 agent-desktop status 與 permissions 回報 ok=true、accessibility.state=granted、automation.state=not_required。
+list-windows 回報 ok=true 並取得視窗清單；app_name 有空字串，不能僅靠該欄位定位。
+以上僅驗證可讀能力及工具回報，未測試提高權限後的寫入，也未修改任何系統權限。
+桌面動作檢查器使用合成狀態；CLI 範例實際驗證 exit 0、3、2。
+尚未整合自動派送，未做真實 GUI 操作的五次對照，不能由規則測試推論流暢度提升。
+compileall 及 git diff --check 結束碼為 0。
+
 ## 0.2.1 驗證
 
 新增兩個 CLI 的輸入邊界測試。修正前重複欄位及 NaN／Infinity 合計出現 8 個 subtest 失敗，因為工具錯誤地回傳 exit 0。
