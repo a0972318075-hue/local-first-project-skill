@@ -106,6 +106,29 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
             self.assertEqual(json.loads((root / '.runs/rewrite/state.json').read_text())['status'], 'failed')
 
+    def test_step_cannot_claim_an_output_precreated_by_an_earlier_step(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            task = {'task_id': 'attribution', 'workdir': folder, 'steps': [
+                {'id': 'seed', 'argv': [sys.executable, '-c',
+                 "from pathlib import Path; Path('first.txt').write_text('one'); "
+                 "Path('claimed.txt').write_text('PRECREATED')"],
+                 'timeout_seconds': 10, 'outputs': ['first.txt']},
+                {'id': 'noop', 'argv': [sys.executable, '-c',
+                 "from pathlib import Path; Path('dispatched.txt').write_text('yes')"],
+                 'timeout_seconds': 10, 'outputs': ['claimed.txt']}]}
+            path = root / 'task.json'
+            path.write_text(json.dumps(task), encoding='utf-8')
+            run = subprocess.run([sys.executable, str(RUNNER), str(path), '--execute'],
+                                 capture_output=True, text=True, timeout=20)
+            self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
+            state = json.loads((root / '.runs/attribution/state.json').read_text(encoding='utf-8'))
+            self.assertEqual(state['status'], 'failed')
+            self.assertEqual([s['status'] for s in state['steps']], ['verified', 'failed'])
+            self.assertFalse((root / 'dispatched.txt').exists(),
+                             'a rejected step must not be dispatched')
+            self.assertEqual((root / 'claimed.txt').read_text(encoding='utf-8'), 'PRECREATED')
+
     def test_execution_output_validation_and_no_automatic_replay(self):
         self.assertTrue(RUNNER.exists(), 'Runner not implemented')
         with tempfile.TemporaryDirectory() as folder:

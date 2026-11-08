@@ -70,6 +70,9 @@ def execute(task, root):
         state['steps'].append(record)
         save_state(checkpoint, state)  # Persist before any process side effect.
         try:
+            for output in step['outputs']:
+                require(not (root / output).resolve().exists(),
+                        f'output already exists before dispatch: {output}')
             with (run_dir / (step['id'] + '.stdout')).open('wb') as out, \
                     (run_dir / (step['id'] + '.stderr')).open('wb') as err:
                 result = subprocess.run(step['argv'], cwd=root, shell=False, stdin=subprocess.DEVNULL,
