@@ -2,6 +2,22 @@
 
 日期 2026-11-08。
 
+## 0.4.1 WorkBuddy AI 第二輪唯讀審查
+
+透過本機 WorkBuddy AI 應用提交只讀提示詞，請其檢查未提交差異並在暫存目錄重現。
+它確認窄情境的 plan/execute 與版本門檻成立，另指出三個邊界：已有實際產物時 plan 被誤判無效、舊版 Python 被歸為一般輸入錯誤、無效相對 workdir 可能被前置重播檢查誤判為 blocked。
+先新增三項回歸測試，實際得到三項失敗；調整檢查順序與錯誤分類後，補上既有產物不得被新任務覆寫的反向測試。
+Python 3.10 的行為由同版本資訊模擬測試驗證，未在真正 Python 3.10 直譯器實測。
+
+```text
+Ran 64 tests in 37.819s
+OK
+PASS: 15 Markdown files; metadata, local links, required text, size and Windows user-path check
+PASS: discovery gates and Git recovery guide
+```
+
+合成情境回放為 origin=synthetic、passed=3、total=3；`git diff --check` 結束碼為 0。
+
 ## WorkBuddy AI 對抗性審查後的修正
 
 本機 WorkBuddy AI 只讀審查 run_task.py 與 video-review，並在暫存目錄重現兩項問題：
@@ -17,7 +33,7 @@ PASS: 15 Markdown files; metadata, local links, required text, size and Windows 
 PASS: discovery gates and Git recovery guide
 ```
 
-WorkBuddy 提出的空紀錄目錄阻擋 plan 模式、空 outputs 的語意、雜湊審閱對應與 Python 版本下限仍需另行設計；逾時後代殘留未在該次隔離實測重現，不列為已證實缺陷。
+WorkBuddy 提出的空 outputs 語意及雜湊審閱對應仍需另行設計；逾時後代殘留未在該次隔離實測重現，不列為已證實缺陷。plan 模式與 Python 版本下限在 0.4.1 處理。
 
 ## 0.4.0 本機影片到簡報實測
 

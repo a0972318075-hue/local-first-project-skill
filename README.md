@@ -1,6 +1,6 @@
 # Local-first Project Skill
 
-目前版本：**0.4.0**。
+目前版本：**0.4.1**。
 
 讓 AI 代理先認識本機環境，主動補足缺少的軟體與依賴，再完成並驗證專案。
 
@@ -40,7 +40,7 @@ GitHub 發布步驟見 docs/PUBLISH.md。本專案採 MIT 授權，詳見 [LICEN
 - references/ 包含發現、補足、桌面操作與驗收指南。
 - tests/ 包含靜態驗證器與行為測試情境。
 
-執行封裝檢查與回歸測試（Python 3，僅使用標準函式庫）。
+執行封裝檢查與回歸測試（Python 3.11 或更新版本，僅使用標準函式庫）。
 
     python tests/validate.py
     python -m unittest discover -s tests -p "test_*.py"
@@ -82,3 +82,8 @@ action_result.py 直接分類 agent-desktop 動作回應；元素值驗證不再
 - [程序執行器](skills/local-first-project/references/runner.md)：明確命令清單、逐步檢查點、逾時停止、輸出驗證與拒絕自動重播。不是作業系統沙箱或 GUI 全自動控制器。
 - [video-review 技能](skills/video-review/SKILL.md)：處理影片身分、字幕取得、抽樣觀看、來源時間戳及簡報證據；可獨立複製到技能目錄。
 - 本機案例：YouTube 搜尋與字幕／畫面核對後，由執行器派送簡報生成及驗證。影片內容與私人原始紀錄不放入公開儲存庫。
+
+## 0.4.1 執行器檢查順序
+
+純計畫檢查可重驗已有執行紀錄和產物的清單；實際執行仍拒絕重播或覆寫既有產物。
+無效工作目錄回報輸入錯誤；不支援的 Python 版本有獨立狀態與結束碼。

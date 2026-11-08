@@ -7,6 +7,7 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 from workflow import read_checkpoint, require, text
@@ -42,7 +43,7 @@ def validate(task):
             resolved = (root / path).resolve()
             require(resolved.is_relative_to(root) and resolved != root and
                     not resolved.is_relative_to(root / '.runs'), 'output outside task scope')
-            require(resolved not in outputs and not resolved.exists(), 'output exists or is duplicated')
+            require(resolved not in outputs, 'duplicate output')
             outputs.add(resolved)
     return root
 
@@ -119,18 +120,21 @@ def main():
     parser.add_argument('manifest', type=Path)
     parser.add_argument('--execute', action='store_true', help='Run only after explicit manifest review')
     args = parser.parse_args()
+    if sys.version_info < (3, 11):
+        print(json.dumps({'status': 'unsupported-runtime', 'error': 'Python 3.11 or newer required'}))
+        return 4
     try:
         task = read_checkpoint(args.manifest)
-        # A previous run always wins over output-exists validation.
-        if isinstance(task, dict) and text(task.get('workdir')) and text(task.get('task_id')):
-            if re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}', task['task_id']):
-                if (Path(task['workdir']) / '.runs' / task['task_id']).exists():
-                    print(json.dumps({'status': 'blocked', 'reason': 'Existing run requires reconciliation'}))
-                    return 3
         root = validate(task)
         if not args.execute:
             print(json.dumps({'status': 'plan-valid', 'steps': len(task['steps'])}))
             return 0
+        if (root / '.runs' / task['task_id']).exists():
+            print(json.dumps({'status': 'blocked', 'reason': 'Existing run requires reconciliation'}))
+            return 3
+        for step in task['steps']:
+            for output in step['outputs']:
+                require(not (root / output).resolve().exists(), f'output already exists: {output}')
         return execute(task, root)
     except (ValueError, OSError, RecursionError) as error:
         print(json.dumps({'status': 'invalid', 'error': str(error)}))
