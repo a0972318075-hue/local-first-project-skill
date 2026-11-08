@@ -1,0 +1,20 @@
+{
+  "origin": "synthetic",
+  "trials": [
+    {"case": "path-miss", "events": [
+      {"action": "inspect-process", "result": "found"},
+      {"action": "verify-application", "result": "passed"}
+    ]},
+    {"case": "git-auth", "events": [
+      {"action": "inspect-helper", "result": "gcm"},
+      {"action": "verify-remote", "result": "matched"}
+    ]},
+    {"case": "unknown-paste", "events": [
+      {"action": "observe", "result": "modal"},
+      {"action": "resolve-modal", "result": "ok"},
+      {"action": "observe", "result": "editing"},
+      {"action": "paste", "result": "ok"},
+      {"action": "verify-content", "result": "matched"}
+    ]}
+  ]
+}

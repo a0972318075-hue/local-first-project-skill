@@ -17,7 +17,7 @@ class PackageRegression(unittest.TestCase):
     def run_check(self, optimized=False):
         args = [sys.executable] + (["-O"] if optimized else [])
         return subprocess.run(args + [str(self.root / "tests/validate.py")],
-                              capture_output=True, text=True, encoding="utf-8")
+                              capture_output=True, text=True, encoding="utf-8", timeout=15)
 
     def test_valid_package(self):
         self.assertEqual(self.run_check().returncode, 0)
@@ -45,6 +45,15 @@ class PackageRegression(unittest.TestCase):
         file = self.root / "skills/local-first-project/references/discovery.md"
         file.write_text(file.read_text(encoding="utf-8").replace("提交身分", ""),
                         encoding="utf-8")
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_backslash_personal_path(self):
+        (self.root / "private.md").write_text(r"D:\Users\AnotherPerson\secret", encoding="utf-8")
+        self.assertNotEqual(self.run_check().returncode, 0)
+
+    def test_broken_readme_relative_link(self):
+        file = self.root / "README.md"
+        file.write_text(file.read_text(encoding="utf-8") + "\n[missing](docs/absent.md)\n", encoding="utf-8")
         self.assertNotEqual(self.run_check().returncode, 0)
 
 if __name__ == "__main__":

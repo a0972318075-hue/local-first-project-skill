@@ -9,6 +9,9 @@
 5. 若仍缺少，可查已開啟桌面工具的 Git 設定與使用者明確指定的本機專案設定。別人的 commit author 或公開 GitHub 帳號名稱不足以決定使用者的 Email。
 6. 無法確認姓名／Email 才詢問。繼續完成修改、測試、差異審查與封裝。取得身分後優先設本專案 local config。
 7. gh auth status 只檢查 gh。網頁已登入時，已授權的網頁工作可以使用該 session；不匯出 Cookie 或繞過登入。
+   Git HTTPS 認證另外查看 `git config --show-origin --get-all credential.helper`。
+   若使用 Git Credential Manager，沿既有 helper 完成必要的瀏覽器授權；不要因 gh 未登入而強制重新登入 gh 或重裝 Git。
+   不使用 `git credential fill` 列印憑證。helper 設定可能是自訂命令，公開紀錄前先檢查並遮罩敏感資料。
 8. 提交後查 log 與工作區狀態。發布另外確認目標 owner/repo、可見性、授權與已授權範圍，再驗證遠端提交。
 
 ## 有界修復
@@ -22,3 +25,4 @@
 | 安裝清單沒有但程序存在 | 查程序路徑與實際版本 | 不重複安裝 |
 
 不要自行捏造 noreply Email、提交者名稱或全域身分。不要因 GitHub 網頁已開啟就宣稱已能從 CLI 推送。
+推送成功後，用 `git rev-parse HEAD` 與 `git ls-remote origin refs/heads/main` 核對實際目標分支提交；分支名稱依專案調整。遠端已更新但本地回應逾時時，先比對遠端再決定重試。

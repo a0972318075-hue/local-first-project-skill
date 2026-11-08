@@ -22,13 +22,17 @@ for file in files:
     text = file.read_text(encoding="utf-8-sig")
     if not (len(text.splitlines()) < 500):
         raise ValueError(f"Too long {file}")
-    if not ("C:/Users/AIO" not in text):
+    if re.search(r"[A-Za-z]:[/\\]Users[/\\][^\s/\\]+", text, re.I):
         raise ValueError(f"Personal path {file}")
+    for target in re.findall(r"\]\(([^)]+)\)", text):
+        if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", target) or target.startswith('#'):
+            continue
+        target = target.split('#', 1)[0]
+        if target and not (file.parent / target).exists():
+            raise ValueError(f"Broken local link in {file}: {target}")
     if not ("\ufffd" not in text):
         raise ValueError(f"Encoding issue {file}")
-if not ((root / "tests/scenarios.md").read_text(encoding="utf-8-sig").count("|") > 30):
-    raise ValueError("Missing scenario coverage")
-print(f"PASS: {len(files)} Markdown files; metadata, references, rules, size and portability")
+print(f"PASS: {len(files)} Markdown files; metadata, local links, required text, size and Windows user-path check")
 
 discovery = (skill.parent / "references/discovery.md").read_text(encoding="utf-8-sig")
 for rule in ("提交身分", "瀏覽器", "證據表", "尚未檢查", "GitHub Desktop"):

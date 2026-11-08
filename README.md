@@ -1,5 +1,7 @@
 # Local-first Project Skill
 
+目前版本：**0.2.0**。
+
 讓 AI 代理先認識本機環境，主動補足缺少的軟體與依賴，再完成並驗證專案。
 
 核心流程為「確認任務 → 本機發現 → 判斷缺口 → 授權內補足 → 真實功能測試 → 執行 → 驗收」。
@@ -27,7 +29,8 @@ Copy-Item -LiteralPath .\skills\local-first-project -Destination "$env:USERPROFI
 
 ## 發布與驗證
 
-本專案不含個人對話、私人路徑或憑證。發布前請執行 tests/validate.py，並參考 tests/scenarios.md 做行為驗收。
+發布前請執行 tests/validate.py，並參考 tests/scenarios.md 做行為驗收。
+自動檢查涵蓋文件中的 Windows 使用者路徑與相對連結，不是完整個資或秘密掃描；原始盤點輸出與代理紀錄仍需人工審查後才可發布。
 驗證器檢查封裝與必要規則，不能證明代理在所有桌面環境都會正確執行。
 GitHub 發布步驟見 docs/PUBLISH.md。本專案採 MIT 授權，詳見 [LICENSE](LICENSE)。
 
@@ -40,4 +43,15 @@ GitHub 發布步驟見 docs/PUBLISH.md。本專案採 MIT 授權，詳見 [LICEN
 執行封裝檢查與回歸測試（Python 3，僅使用標準函式庫）。
 
     python tests/validate.py
-    python tests/test_package.py
+    python -m unittest discover -s tests -p "test_*.py"
+    python tests/evaluate_traces.py tests/fixtures/traces.json
+
+## 0.2.0 新增工具
+
+- Windows 只讀盤點：查程序、PATH、安裝登錄、開始功能表與已知路徑；逐項保留未查與錯誤狀態。
+- 任務檢查器：拒絕以腳本替代指定 GUI，未知操作結果要求先觀察，保留可接續的 JSON 任務格式。
+- 三個情境的紀錄評分器：PATH 漏查、Git 認證分流、未知貼上結果。附合成紀錄與錯誤路徑回歸測試。
+
+操作與格式見 [執行指南](skills/local-first-project/references/execution.md)。
+評分器測的是紀錄規則；附帶紀錄標示 synthetic，**不是實際代理表現或技能效果比較**。
+本版不提供自動執行器、安裝器或檢查點寫入服務。真實代理的有／無技能對照仍待完成。
