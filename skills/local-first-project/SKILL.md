@@ -58,6 +58,7 @@ Windows 細節與必填證據表見 [本機發現](references/discovery.md)。�
 兩次相同失敗後重新診斷；沒有新證據或新解法時停止該路徑，報告具體阻礙並繼續獨立可做部分。
 桌面細節見 [桌面操作](references/desktop.md)。
 設計跨應用助理或接入執行器時，讀 [通用電腦控制架構](references/computer-control.md)，使用應用配方及動作結果分類，分開核對元素送達與任務完成。
+需要順序執行已審閱的本機建置／驗證命令時，使用 [有界程序執行器](references/runner.md)，先檢查 manifest，再執行並保留檢查點。
 
 ## 6. 驗收、清理與交付
 

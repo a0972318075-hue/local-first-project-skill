@@ -1,6 +1,6 @@
 # Local-first Project Skill
 
-目前版本：**0.3.1**。
+目前版本：**0.4.0**。
 
 讓 AI 代理先認識本機環境，主動補足缺少的軟體與依賴，再完成並驗證專案。
 
@@ -76,3 +76,9 @@ GitHub 發布步驟見 docs/PUBLISH.md。本專案採 MIT 授權，詳見 [LICEN
 desktop_guard 支援同一視窗內的模態容器識別，避免放行被對話框遮擋的背景元素。
 action_result.py 直接分類 agent-desktop 動作回應；元素值驗證不再被當作文件已存檔，未知結果不准盲目重播。
 這版仍是共用技能與檢查工具，不是任意應用的自動執行器。
+
+## 0.4.0 有界執行與影片整理
+
+- [程序執行器](skills/local-first-project/references/runner.md)：明確命令清單、逐步檢查點、逾時停止、輸出驗證與拒絕自動重播。不是作業系統沙箱或 GUI 全自動控制器。
+- [video-review 技能](skills/video-review/SKILL.md)：處理影片身分、字幕取得、抽樣觀看、來源時間戳及簡報證據；可獨立複製到技能目錄。
+- 本機案例：YouTube 搜尋與字幕／畫面核對後，由執行器派送簡報生成及驗證。影片內容與私人原始紀錄不放入公開儲存庫。
