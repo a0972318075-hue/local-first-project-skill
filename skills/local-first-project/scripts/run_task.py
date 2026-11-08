@@ -92,6 +92,22 @@ def execute(task, root):
         if record['status'] != 'verified':
             print(json.dumps(record))
             return 1
+    for record in state['steps']:
+        for artifact in record.get('outputs', []):
+            path = (root / artifact['path']).resolve()
+            digest = None
+            if path.is_relative_to(root):
+                try:
+                    with path.open('rb') as stream:
+                        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+                except OSError:
+                    pass
+            if not path.is_relative_to(root) or digest != artifact['sha256']:
+                state['status'] = 'failed'
+                state['reason'] = f'output changed after verification: {artifact["path"]}'
+                save_state(checkpoint, state)
+                print(json.dumps({'status': 'failed', 'reason': state['reason']}))
+                return 1
     state['status'] = 'verified'
     save_state(checkpoint, state)
     print(json.dumps({'status': 'verified', 'steps': len(task['steps']), 'checkpoint': str(checkpoint)}))

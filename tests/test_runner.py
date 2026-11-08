@@ -9,6 +9,23 @@ RUNNER = Path(__file__).resolve().parents[1] / 'skills/local-first-project/scrip
 
 
 class RunnerTests(unittest.TestCase):
+    def test_later_step_cannot_silently_change_verified_output(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            task = {'task_id': 'rewrite', 'workdir': folder, 'steps': [
+                {'id': 'make', 'argv': [sys.executable, '-c',
+                 "from pathlib import Path; Path('result.txt').write_text('GOOD')"],
+                 'timeout_seconds': 5, 'outputs': ['result.txt']},
+                {'id': 'change', 'argv': [sys.executable, '-c',
+                 "from pathlib import Path; Path('result.txt').write_text('BAD')"],
+                 'timeout_seconds': 5, 'outputs': []}]}
+            path = root / 'task.json'
+            path.write_text(json.dumps(task), encoding='utf-8')
+            run = subprocess.run([sys.executable, str(RUNNER), str(path), '--execute'],
+                                 capture_output=True, text=True, timeout=20)
+            self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
+            self.assertEqual(json.loads((root / '.runs/rewrite/state.json').read_text())['status'], 'failed')
+
     def test_execution_output_validation_and_no_automatic_replay(self):
         self.assertTrue(RUNNER.exists(), 'Runner not implemented')
         with tempfile.TemporaryDirectory() as folder:

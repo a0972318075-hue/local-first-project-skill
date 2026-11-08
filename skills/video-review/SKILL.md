@@ -38,6 +38,7 @@ description: Use when a user asks to open a video, summarize its content, or cre
 不為湊完整清單而補造規則，不為湊結論而補寫結局。
 引用採少量必要原句，主要用自己的話摘要，不交付整段逐字字幕。
 依可用簡報工具產生可編輯 PPTX，做結構檢查、每頁視覺檢查及本機應用開啟驗收。
+若使用 local-first-project 的 run_task.py，其 verified 僅表示程序成功且宣告的檔案非空、雜湊一致；逐頁視覺與目標軟體開啟須另留驗收紀錄。
 
 ## 5. 失敗處理
 

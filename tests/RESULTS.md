@@ -2,6 +2,23 @@
 
 日期 2026-11-08。
 
+## WorkBuddy AI 對抗性審查後的修正
+
+本機 WorkBuddy AI 只讀審查 run_task.py 與 video-review，並在暫存目錄重現兩項問題：
+後續步驟可改寫先前已驗證輸出而仍回報 verified；`.runs/` 日誌未被 Git 忽略。
+新增前者的回歸測試，修正前測試實際回報 `AssertionError: 0 != 1`，修正後在完成前重算所有宣告產物的 SHA256，不一致則 failed。
+`.gitignore` 新增 `.runs/`，`git check-ignore -v .runs/demo/state.json` 顯示該規則生效。
+video-review 補明程序驗證不能替代逐頁視覺與目標軟體驗收。
+
+```text
+Ran 59 tests in 31.811s
+OK
+PASS: 15 Markdown files; metadata, local links, required text, size and Windows user-path check
+PASS: discovery gates and Git recovery guide
+```
+
+WorkBuddy 提出的空紀錄目錄阻擋 plan 模式、空 outputs 的語意、雜湊審閱對應與 Python 版本下限仍需另行設計；逾時後代殘留未在該次隔離實測重現，不列為已證實缺陷。
+
 ## 0.4.0 本機影片到簡報實測
 
 瀏覽器搜尋「規則怪談之《午夜規則》」，核對 YouTube 影片 ID `_hZE9fkBjzA`、頻道及 26:28 片長。
