@@ -2,6 +2,29 @@
 
 日期 2026-11-08。
 
+## 獨立記事本文件實測
+
+在新建文件完成一次真實「觀察→檢查→操作→驗證」及儲存、關閉、重開。
+初次啟動因低完整性互動租約遭 PERM_DENIED；經宿主正式執行審批後成功。沒有修改 UAC 或系統原則，也不據此宣稱取得管理員權限。
+
+編輯前，以完整新快照找到唯一文字欄位、核對本次程序與視窗、檢查 permissions，再產生實際 preflight JSON。
+desktop_guard.py 回報 ready-for-dispatch 後才執行 set-value；結果 delivered_verified，另以 get value 回讀中文與箭頭字元一致。
+儲存快捷鍵回報 delivered_unverified，因此重新觀察對話框而非重播。
+首次存檔因正斜線路徑遭「檔案名稱無效」，改成 Windows 反斜線後成功。
+其中一次錯誤讀檔後 PowerShell 仍印出 PASS；該輸出無效，改成 ErrorActionPreference=Stop 並重做存在與內容檢查。
+
+最終真實驗收輸出：
+
+```text
+DISK_CONTENT_MATCH=PASS
+REOPEN_UI_CONTENT_MATCH=PASS
+SHA256=4DEB13FC3D0FF4B19A216EA2805994AFAB4748DEDA98A1A05DF3FDB734FB58B4
+```
+
+測試文件由記事本 GUI 寫入並儲存；腳本只建證據目錄、紀錄與唯讀核對，沒有直接生成文件內容。
+本機保留 preflight、編輯／回讀結果、重開證據及截圖；公開專案只記去識別摘要，不上傳原始桌面資料。
+這是單次有人監督的實測；只在主要文字寫入接入檢查器，儲存／關閉等步驟仍由代理依新快照逐步執行，尚不是所有動作自動整合或五次對照測試。
+
 ## 0.3.0 桌面控制驗證
 
 新增 desktop_guard.py 及 13 個測試，涵蓋語意／實體輸入焦點、過期定位、錯誤視窗、唯一性、模態遮擋、送達不明、已完成動作、權限、使用者介入、不可操作目標、輸入型別、安全重試與 CLI 結束碼。
