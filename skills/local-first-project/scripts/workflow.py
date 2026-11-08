@@ -16,6 +16,27 @@ def text(value):
     return isinstance(value, str) and bool(value.strip())
 
 
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        require(key not in result, 'duplicate JSON field')
+        result[key] = value
+    return result
+
+
+def reject_constant(value):
+    raise ValueError('nonstandard JSON number')
+
+
+def read_checkpoint(path):
+    # Bound the actual read, not a prior stat that can become stale.
+    with path.open('rb') as stream:
+        payload = stream.read(1024 * 1024 + 1)
+    require(len(payload) <= 1024 * 1024, 'checkpoint exceeds 1 MiB')
+    return json.loads(payload.decode('utf-8-sig'), object_pairs_hook=unique_object,
+                      parse_constant=reject_constant)
+
+
 def evaluate(state):
     require(isinstance(state, dict), 'state must be an object')
     require(type(state.get('schema_version')) is int and state['schema_version'] == 1,
@@ -65,9 +86,8 @@ def main():
     parser.add_argument('checkpoint', type=Path)
     args = parser.parse_args()
     try:
-        require(args.checkpoint.stat().st_size <= 1024 * 1024, 'checkpoint exceeds 1 MiB')
-        result = evaluate(json.loads(args.checkpoint.read_text(encoding='utf-8-sig')))
-    except (ValueError, OSError) as error:
+        result = evaluate(read_checkpoint(args.checkpoint))
+    except (ValueError, OSError, RecursionError) as error:
         print(json.dumps({'decision': 'invalid', 'error': str(error)}, ensure_ascii=True))
         return 2
     print(json.dumps(result, ensure_ascii=True))

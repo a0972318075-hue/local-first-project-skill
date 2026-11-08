@@ -2,6 +2,21 @@
 
 日期 2026-11-08。
 
+## 0.2.1 驗證
+
+新增兩個 CLI 的輸入邊界測試。修正前重複欄位及 NaN／Infinity 合計出現 8 個 subtest 失敗，因為工具錯誤地回傳 exit 0。
+修正後完整測試輸出：
+
+```text
+Ran 30 tests in 23.907s
+OK
+```
+
+測試包含重複欄位、非標準數值、深層 JSON、錯誤 UTF-8、超過 1 MiB 的資料。
+深層 JSON 在目前 Python 原本即可回傳結構化錯誤；新增 RecursionError 處理支援其他 Python 執行環境可能的錯誤型別，尚未跨版本實測。
+兩個入口改成有界讀取，避免先 stat 再完整讀檔之間的大小變動。
+另嘗試 Windows PowerShell 5.1 實機執行，遭執行原則回報 UnauthorizedAccess；未變更原則，該版本功能仍未驗證。完整 30 項測試中的 Windows 盤點使用 PowerShell 7。
+
 ## 0.2.0 驗證
 
 新增 Windows 只讀盤點、任務 JSON 檢查器、三個情境紀錄評分器。

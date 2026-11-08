@@ -1,17 +1,18 @@
-# 可執行輔助工具（0.2.0）
+# 可執行輔助工具（0.2.1）
 
 這些工具支援既有流程；不替代理授權、不操作桌面、不自動安裝軟體。
 
 ## Windows 只讀盤點
 
-從技能目錄執行，PowerShell 5.1 或 7，無第三方套件：
+從技能目錄執行，已實測 PowerShell 7，無第三方套件：
 
 ```powershell
-powershell -NoProfile -File scripts/discover_windows.ps1 -Product LibreOffice -Command soffice
-powershell -NoProfile -File scripts/discover_windows.ps1 -Product Git -Command git
+pwsh -NoProfile -File scripts/discover_windows.ps1 -Product LibreOffice -Command soffice
+pwsh -NoProfile -File scripts/discover_windows.ps1 -Product Git -Command git
 ```
 
 已知執行檔可用 `-KnownPath` 傳入完整路徑。產品名稱是字面比對，不支援萬用字元。
+PowerShell 5.1 尚未完成功能驗證。若腳本被執行原則阻擋，記錄 blocked，遵循環境授權流程；不要自動調整或繞過原則。
 輸出 JSON 包含 schema_version、observed_at、product、status、evidence、limitations。
 每筆 evidence 有 source、status（found / not-found / unchecked / error）及 details。
 來源是程序、PATH、三個登錄安裝位置、開始功能表捷徑、指定路徑。
@@ -66,6 +67,8 @@ python scripts/workflow.py path/to/checkpoint.json
 ```
 
 exit 0 表示資料合法；exit 2 表示無效，並輸出原因。
+輸入採 UTF-8（可有 BOM），上限 1 MiB；拒絕任何層級的重複欄位及 NaN／Infinity。
+錯誤輸入回傳 JSON error，外部執行端仍需設定逾時並檢查結束碼。
 合法資料仍需讀取 decision：
 
 | decision | 接續工作 |

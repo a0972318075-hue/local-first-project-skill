@@ -1,6 +1,6 @@
 # Local-first Project Skill
 
-目前版本：**0.2.0**。
+目前版本：**0.2.1**。
 
 讓 AI 代理先認識本機環境，主動補足缺少的軟體與依賴，再完成並驗證專案。
 
@@ -55,3 +55,9 @@ GitHub 發布步驟見 docs/PUBLISH.md。本專案採 MIT 授權，詳見 [LICEN
 操作與格式見 [執行指南](skills/local-first-project/references/execution.md)。
 評分器測的是紀錄規則；附帶紀錄標示 synthetic，**不是實際代理表現或技能效果比較**。
 本版不提供自動執行器、安裝器或檢查點寫入服務。真實代理的有／無技能對照仍待完成。
+
+## 0.2.1 輸入可靠性修正
+
+任務檢查器與紀錄評分器拒絕重複 JSON 欄位及 NaN／Infinity，避免靜默覆寫或接受非標準資料。
+實際讀取限制為 1 MiB；無效編碼、深度超限及格式錯誤使用 JSON 錯誤與 exit 2 回報。
+測試增至 30 項。PowerShell 7 已實測；本機 PowerShell 5.1 被執行原則阻擋，未變更或繞過該原則。

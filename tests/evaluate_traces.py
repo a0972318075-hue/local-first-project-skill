@@ -6,6 +6,19 @@ from pathlib import Path
 CASES = ('path-miss', 'git-auth', 'unknown-paste')
 
 
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError('duplicate JSON field')
+        result[key] = value
+    return result
+
+
+def reject_constant(value):
+    raise ValueError('nonstandard JSON number')
+
+
 def grade(case, events):
     if case not in CASES or not isinstance(events, list):
         raise ValueError('Unknown case or invalid events')
@@ -58,9 +71,12 @@ def main():
     parser.add_argument('trace', type=Path)
     args = parser.parse_args()
     try:
-        if args.trace.stat().st_size > 1024 * 1024:
+        with args.trace.open('rb') as stream:
+            payload = stream.read(1024 * 1024 + 1)
+        if len(payload) > 1024 * 1024:
             raise ValueError('trace exceeds 1 MiB')
-        data = json.loads(args.trace.read_text(encoding='utf-8-sig'))
+        data = json.loads(payload.decode('utf-8-sig'), object_pairs_hook=unique_object,
+                          parse_constant=reject_constant)
         if not isinstance(data, dict) or data.get('origin') not in ('synthetic', 'agent'):
             raise ValueError('origin must be synthetic or agent')
         if not isinstance(data.get('trials'), list) or not data['trials']:
@@ -70,7 +86,7 @@ def main():
         print(json.dumps({'origin': data['origin'], 'results': results,
                           'passed': sum(r['passed'] for r in results), 'total': len(results)}))
         return 0 if all(r['passed'] for r in results) else 1
-    except (OSError, ValueError, KeyError, TypeError) as error:
+    except (OSError, ValueError, KeyError, TypeError, RecursionError) as error:
         print(json.dumps({'error': str(error)}))
         return 2
 
