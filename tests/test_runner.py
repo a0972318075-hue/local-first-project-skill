@@ -9,6 +9,22 @@ RUNNER = Path(__file__).resolve().parents[1] / 'skills/local-first-project/scrip
 
 
 class RunnerTests(unittest.TestCase):
+    def test_argument_values_are_preserved_and_nul_is_rejected_before_dispatch(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            path = root / 'task.json'
+            for task_id, value, expected in (('valid-args', '', 0), ('bad-args', chr(0), 2)):
+                with self.subTest(task_id=task_id):
+                    code = "import sys; assert sys.argv[1:] == ['', '  ']"
+                    task = {'task_id': task_id, 'workdir': folder, 'steps': [
+                        {'id': 'step', 'argv': [sys.executable, '-c', code, value, '  '],
+                         'timeout_seconds': 5, 'outputs': []}]}
+                    path.write_text(json.dumps(task), encoding='utf-8')
+                    run = subprocess.run([sys.executable, str(RUNNER), str(path), '--execute'],
+                                         capture_output=True, text=True, timeout=10)
+                    self.assertEqual(run.returncode, expected, run.stdout + run.stderr)
+                    self.assertEqual((root / '.runs' / task_id).exists(), expected == 0)
+
     def test_rejects_windows_device_names_before_creating_run(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

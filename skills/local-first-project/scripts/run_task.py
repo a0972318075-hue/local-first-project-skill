@@ -38,7 +38,9 @@ def validate(task):
         require(sid.lower() not in ids, 'duplicate step id (case-insensitive)')
         ids.add(sid.lower())
         argv = step.get('argv')
-        require(isinstance(argv, list) and argv and all(text(a) for a in argv), 'argv array required')
+        require(isinstance(argv, list) and argv and text(argv[0]) and
+                all(isinstance(arg, str) and '\0' not in arg for arg in argv),
+                'argv must contain an executable and strings without NUL characters')
         require(Path(argv[0]).is_absolute() and Path(argv[0]).is_file(), 'absolute executable required')
         require(type(step.get('timeout_seconds')) is int and 1 <= step['timeout_seconds'] <= 600,
                 'timeout_seconds must be 1..600')
