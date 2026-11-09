@@ -24,6 +24,7 @@ def validate(task):
     steps = task.get('steps')
     require(isinstance(steps, list) and 0 < len(steps) <= 20, 'one to twenty steps required')
     ids, outputs = set(), set()
+    output_directories = set()
     for step in steps:
         require(isinstance(step, dict), 'invalid step')
         sid = step.get('id')
@@ -46,6 +47,10 @@ def validate(task):
             require(resolved.is_relative_to(root) and resolved != root and
                     not resolved.is_relative_to(root / '.runs'), 'output outside task scope')
             require(resolved not in outputs, 'duplicate output')
+            parents = set(resolved.parents)
+            require(resolved not in output_directories and outputs.isdisjoint(parents),
+                    'nested output paths conflict: one output would have to be a directory')
+            output_directories.update(parents)
             outputs.add(resolved)
     return root
 
