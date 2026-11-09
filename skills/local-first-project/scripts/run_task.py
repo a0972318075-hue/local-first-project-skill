@@ -15,6 +15,13 @@ from workflow import read_checkpoint, require, text
 WINDOWS_DEVICE_ID = re.compile(r'CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9]', re.IGNORECASE)
 
 
+def resolve_output(root, path):
+    resolved = (root / path).resolve()
+    require(resolved.is_relative_to(root) and resolved != root and
+            not resolved.is_relative_to(root / '.runs'), 'output outside task scope')
+    return resolved
+
+
 def validate(task):
     require(isinstance(task, dict), 'task must be an object')
     require(isinstance(task.get('task_id'), str) and
@@ -49,9 +56,7 @@ def validate(task):
             require(text(item), 'output path required')
             path = Path(item)
             require(not path.is_absolute() and '..' not in path.parts, 'relative output required')
-            resolved = (root / path).resolve()
-            require(resolved.is_relative_to(root) and resolved != root and
-                    not resolved.is_relative_to(root / '.runs'), 'output outside task scope')
+            resolved = resolve_output(root, path)
             require(resolved not in outputs, 'duplicate output')
             parents = set(resolved.parents)
             require(resolved not in output_directories and outputs.isdisjoint(parents),
@@ -84,7 +89,7 @@ def execute(task, root):
         save_state(checkpoint, state)  # Persist before any process side effect.
         try:
             for output in step['outputs']:
-                require(not (root / output).resolve().exists(),
+                require(not resolve_output(root, output).exists(),
                         f'output already exists before dispatch: {output}')
             with (run_dir / (step['id'] + '.stdout')).open('wb') as out, \
                     (run_dir / (step['id'] + '.stderr')).open('wb') as err:
@@ -93,8 +98,8 @@ def execute(task, root):
             require(result.returncode == 0, f'process exit {result.returncode}')
             artifacts = []
             for output in step['outputs']:
-                path = (root / output).resolve()
-                require(path.is_relative_to(root) and path.is_file() and path.stat().st_size > 0,
+                path = resolve_output(root, output)
+                require(path.is_file() and path.stat().st_size > 0,
                         f'missing or empty output: {output}')
                 with path.open('rb') as stream:
                     digest = hashlib.file_digest(stream, 'sha256').hexdigest()
@@ -111,15 +116,14 @@ def execute(task, root):
             return 1
     for record in state['steps']:
         for artifact in record.get('outputs', []):
-            path = (root / artifact['path']).resolve()
             digest = None
-            if path.is_relative_to(root):
-                try:
-                    with path.open('rb') as stream:
-                        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-                except OSError:
-                    pass
-            if not path.is_relative_to(root) or digest != artifact['sha256']:
+            try:
+                path = resolve_output(root, artifact['path'])
+                with path.open('rb') as stream:
+                    digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+            except (OSError, ValueError):
+                pass
+            if digest != artifact['sha256']:
                 state['status'] = 'failed'
                 state['reason'] = f'output changed after verification: {artifact["path"]}'
                 save_state(checkpoint, state)
@@ -150,7 +154,7 @@ def main():
             return 3
         for step in task['steps']:
             for output in step['outputs']:
-                require(not (root / output).resolve().exists(), f'output already exists: {output}')
+                require(not resolve_output(root, output).exists(), f'output already exists: {output}')
         return execute(task, root)
     except (ValueError, OSError, RecursionError) as error:
         print(json.dumps({'status': 'invalid', 'error': str(error)}))

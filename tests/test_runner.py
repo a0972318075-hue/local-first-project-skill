@@ -9,6 +9,27 @@ RUNNER = Path(__file__).resolve().parents[1] / 'skills/local-first-project/scrip
 
 
 class RunnerTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == 'win32', 'uses a Windows directory junction')
+    def test_output_cannot_be_redirected_into_run_metadata(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            path = root / 'task.json'
+            code = ("import subprocess; from pathlib import Path; "
+                    "subprocess.run(['cmd.exe', '/d', '/c', 'mklink', '/J', 'out', '.runs'], check=True); "
+                    "Path('out/result.txt').write_text('generated')")
+            task = {'task_id': 'redirect', 'workdir': folder, 'steps': [
+                {'id': 'step', 'argv': [sys.executable, '-c', code],
+                 'timeout_seconds': 10, 'outputs': ['out/result.txt']}]}
+            path.write_text(json.dumps(task), encoding='utf-8')
+            run = subprocess.run([sys.executable, str(RUNNER), str(path), '--execute'],
+                                 capture_output=True, text=True, timeout=20)
+            self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
+            self.assertEqual(json.loads(run.stdout)['reason'], 'output outside task scope')
+            state = json.loads((root / '.runs/redirect/state.json').read_text(encoding='utf-8'))
+            self.assertEqual(state['status'], 'failed')
+            self.assertEqual(state['steps'][0]['status'], 'failed')
+            self.assertNotIn('outputs', state['steps'][0])
+
     def test_argument_values_are_preserved_and_nul_is_rejected_before_dispatch(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
