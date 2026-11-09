@@ -27,9 +27,11 @@ def validate(task):
     for step in steps:
         require(isinstance(step, dict), 'invalid step')
         sid = step.get('id')
-        require(isinstance(sid, str) and re.fullmatch(r'[a-zA-Z0-9_-]{1,64}', sid)
-                and sid not in ids, 'invalid or duplicate step id')
-        ids.add(sid)
+        require(isinstance(sid, str) and re.fullmatch(r'[a-zA-Z0-9_-]{1,64}', sid),
+                'invalid step id')
+        # Log filenames must remain distinct on case-insensitive filesystems.
+        require(sid.lower() not in ids, 'duplicate step id (case-insensitive)')
+        ids.add(sid.lower())
         argv = step.get('argv')
         require(isinstance(argv, list) and argv and all(text(a) for a in argv), 'argv array required')
         require(Path(argv[0]).is_absolute() and Path(argv[0]).is_file(), 'absolute executable required')

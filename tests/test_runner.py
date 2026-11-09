@@ -9,6 +9,23 @@ RUNNER = Path(__file__).resolve().parents[1] / 'skills/local-first-project/scrip
 
 
 class RunnerTests(unittest.TestCase):
+    def test_plan_rejects_step_ids_that_differ_only_by_case(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            task = {'task_id': 'log-collision', 'workdir': folder, 'steps': [
+                {'id': name, 'argv': [sys.executable, '-c', 'pass'],
+                 'timeout_seconds': 5, 'outputs': []}
+                for name in ('Build', 'build')]}
+            path = root / 'task.json'
+            path.write_text(json.dumps(task), encoding='utf-8')
+            for flags in ([], ['--execute']):
+                with self.subTest(flags=flags):
+                    run = subprocess.run([sys.executable, str(RUNNER), str(path), *flags],
+                                         capture_output=True, text=True, timeout=10)
+                    self.assertEqual(run.returncode, 2, run.stdout + run.stderr)
+                    self.assertEqual(json.loads(run.stdout)['status'], 'invalid')
+                    self.assertFalse((root / '.runs').exists())
+
     def test_plan_valid_even_when_run_directory_already_exists(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
