@@ -12,11 +12,14 @@ from pathlib import Path
 
 from workflow import read_checkpoint, require, text
 
+WINDOWS_DEVICE_ID = re.compile(r'CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9]', re.IGNORECASE)
+
 
 def validate(task):
     require(isinstance(task, dict), 'task must be an object')
     require(isinstance(task.get('task_id'), str) and
             re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}', task['task_id']), 'invalid task_id')
+    require(not WINDOWS_DEVICE_ID.fullmatch(task['task_id']), 'task_id is a reserved Windows device name')
     require(text(task.get('workdir')), 'workdir required')
     root = Path(task['workdir'])
     require(root.is_absolute() and root.is_dir(), 'workdir must be an existing absolute directory')
@@ -30,6 +33,7 @@ def validate(task):
         sid = step.get('id')
         require(isinstance(sid, str) and re.fullmatch(r'[a-zA-Z0-9_-]{1,64}', sid),
                 'invalid step id')
+        require(not WINDOWS_DEVICE_ID.fullmatch(sid), 'step id is a reserved Windows device name')
         # Log filenames must remain distinct on case-insensitive filesystems.
         require(sid.lower() not in ids, 'duplicate step id (case-insensitive)')
         ids.add(sid.lower())

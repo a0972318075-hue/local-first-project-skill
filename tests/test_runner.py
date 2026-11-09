@@ -9,6 +9,22 @@ RUNNER = Path(__file__).resolve().parents[1] / 'skills/local-first-project/scrip
 
 
 class RunnerTests(unittest.TestCase):
+    def test_rejects_windows_device_names_before_creating_run(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            path = root / 'task.json'
+            for task_id, step_id in (('nUl', 'build'), ('serial', 'COM1'), ('parallel', 'Lpt9')):
+                with self.subTest(task_id=task_id, step_id=step_id):
+                    task = {'task_id': task_id, 'workdir': folder, 'steps': [
+                        {'id': step_id, 'argv': [sys.executable, '-c', 'pass'],
+                         'timeout_seconds': 5, 'outputs': []}]}
+                    path.write_text(json.dumps(task), encoding='utf-8')
+                    run = subprocess.run([sys.executable, str(RUNNER), str(path), '--execute'],
+                                         capture_output=True, text=True, timeout=10)
+                    self.assertEqual(run.returncode, 2, run.stdout + run.stderr)
+                    self.assertIn('reserved Windows device name', json.loads(run.stdout)['error'])
+                    self.assertFalse((root / '.runs').exists())
+
     def test_plan_rejects_output_that_requires_another_output_to_be_a_directory(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
