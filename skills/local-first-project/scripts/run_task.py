@@ -126,8 +126,14 @@ def execute(task, root):
             if digest != artifact['sha256']:
                 state['status'] = 'failed'
                 state['reason'] = f'output changed after verification: {artifact["path"]}'
+                state['artifact_failure'] = {
+                    'step_id': record['id'],
+                    'path': artifact['path'],
+                    'kind': 'unavailable' if digest is None else 'digest-mismatch',
+                }
                 save_state(checkpoint, state)
-                print(json.dumps({'status': 'failed', 'reason': state['reason']}))
+                print(json.dumps({'status': 'failed', 'reason': state['reason'],
+                                  'artifact_failure': state['artifact_failure']}))
                 return 1
     state['status'] = 'verified'
     save_state(checkpoint, state)

@@ -190,7 +190,11 @@ class RunnerTests(unittest.TestCase):
             run = subprocess.run([sys.executable, str(RUNNER), str(path), '--execute'],
                                  capture_output=True, text=True, timeout=20)
             self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
-            self.assertEqual(json.loads((root / '.runs/rewrite/state.json').read_text())['status'], 'failed')
+            state = json.loads((root / '.runs/rewrite/state.json').read_text())
+            self.assertEqual(state['status'], 'failed')
+            expected = {'step_id': 'make', 'path': 'result.txt', 'kind': 'digest-mismatch'}
+            self.assertEqual(state['artifact_failure'], expected)
+            self.assertEqual(json.loads(run.stdout)['artifact_failure'], expected)
 
     def test_step_cannot_claim_an_output_precreated_by_an_earlier_step(self):
         with tempfile.TemporaryDirectory() as folder:
