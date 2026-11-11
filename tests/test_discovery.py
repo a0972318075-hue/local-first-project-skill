@@ -10,10 +10,22 @@ SCRIPT = Path(__file__).resolve().parents[1] / 'skills/local-first-project/scrip
 
 @unittest.skipUnless(os.name == 'nt', 'Windows collector requires Windows')
 class DiscoveryTests(unittest.TestCase):
-    def run_probe(self, *args):
-        return subprocess.run([shutil.which('pwsh') or 'powershell.exe', '-NoProfile',
-                               '-File', str(SCRIPT), *args], capture_output=True,
-                              text=True, encoding='utf-8', timeout=45)
+    def run_probe(self, *args, host=None):
+        host = host or shutil.which('pwsh') or 'powershell.exe'
+        result = subprocess.run([host, '-NoProfile', '-File', str(SCRIPT), *args],
+                                capture_output=True, timeout=45)
+        if (result.returncode and b'SecurityError:' in result.stderr
+                and b'FullyQualifiedErrorId : UnauthorizedAccess' in result.stderr):
+            self.skipTest('Host execution policy prevented the collector from starting')
+        return result
+
+    def test_unicode_json_output_on_each_available_host(self):
+        product = '\u672c\u6a5f\u76e4\u9ede'
+        for host in filter(None, (shutil.which('powershell.exe'), shutil.which('pwsh'))):
+            with self.subTest(host=host):
+                result = self.run_probe('-Product', product, host=host)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout.decode('utf-8'))['product'], product)
 
     def test_known_file_is_candidate_not_ready(self):
         result = self.run_probe('-Product', 'Python', '-KnownPath', os.sys.executable)
@@ -31,7 +43,10 @@ class DiscoveryTests(unittest.TestCase):
         self.assertTrue(data['limitations'])
 
     def test_rejects_wildcard_product(self):
-        self.assertNotEqual(self.run_probe('-Product', '*').returncode, 0)
+        result = self.run_probe('-Product', '*')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b'Product', result.stderr)
+        self.assertIn(rb'^[\p{L}\p{N}]', result.stderr)
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ param(
     [string]$KnownPath
 )
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $evidence = [System.Collections.Generic.List[object]]::new()
 function Add-Evidence($Source, $Status, $Details) {
     $evidence.Add([ordered]@{source=$Source; status=$Status; details=@($Details)})
