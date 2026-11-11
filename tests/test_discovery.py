@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -21,11 +22,21 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_unicode_json_output_on_each_available_host(self):
         product = '\u672c\u6a5f\u76e4\u9ede'
-        for host in filter(None, (shutil.which('powershell.exe'), shutil.which('pwsh'))):
-            with self.subTest(host=host):
-                result = self.run_probe('-Product', product, host=host)
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(json.loads(result.stdout.decode('utf-8'))['product'], product)
+        hosts = [host for host in (shutil.which('powershell.exe'), shutil.which('pwsh')) if host]
+        verified_hosts = []
+        with tempfile.TemporaryDirectory() as folder:
+            candidate = Path(folder) / f'{product} [1].txt'
+            candidate.touch()
+            for host in hosts:
+                with self.subTest(host=host):
+                    result = self.run_probe('-Product', product, '-KnownPath', str(candidate), host=host)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    data = json.loads(result.stdout.decode('utf-8'))
+                    self.assertEqual(data['product'], product)
+                    self.assertIn({'source': 'known-path', 'status': 'found',
+                                   'details': [str(candidate)]}, data['evidence'])
+                    verified_hosts.append(host)
+        self.assertTrue(verified_hosts, 'No PowerShell host verified the UTF-8 known-path evidence')
 
     def test_known_file_is_candidate_not_ready(self):
         result = self.run_probe('-Product', 'Python', '-KnownPath', os.sys.executable)
