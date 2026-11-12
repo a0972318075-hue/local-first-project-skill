@@ -1,9 +1,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)]
-    [ValidatePattern('^[\p{L}\p{N}][\p{L}\p{N} ._+-]{0,79}$')]
+    [ValidatePattern('^[\p{L}\p{N}][\p{L}\p{N} ._+-]{0,79}\z')]
     [string]$Product,
-    [ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$')]
+    [ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}\z')]
     [string]$Command,
     [string]$KnownPath
 )

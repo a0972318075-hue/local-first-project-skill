@@ -59,6 +59,18 @@ class DiscoveryTests(unittest.TestCase):
         self.assertIn(b'Product', result.stderr)
         self.assertIn(rb'^[\p{L}\p{N}]', result.stderr)
 
+    def test_rejects_trailing_newline_in_discovery_arguments(self):
+        for parameter, args, pattern_start in (
+            ('Product', ('-Product', 'Example\n'), rb'^[\p{L}\p{N}]'),
+            ('Command', ('-Product', 'Example', '-Command', 'Example\n'), b'^[a-zA-Z0-9]'),
+        ):
+            with self.subTest(parameter=parameter):
+                result = self.run_probe(*args)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertFalse(result.stdout.strip())
+                self.assertIn(parameter.encode('ascii'), result.stderr)
+                self.assertIn(pattern_start, result.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()
