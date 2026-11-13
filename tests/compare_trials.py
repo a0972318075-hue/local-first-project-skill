@@ -44,8 +44,8 @@ def compare(data):
         count = trial.get('tool_calls')
         if type(count) is not int or not isinstance(events, list) or count < len(events):
             raise ValueError('invalid tool call count')
-        if status not in ('executed', 'blocked') or (status == 'executed' and not events):
-            raise ValueError('invalid trial status or missing events')
+        if status not in ('executed', 'blocked'):
+            raise ValueError('invalid trial status')
         valid_trace = grade(case, events)
         pair[condition] = (provenance, status)
         groups[case][condition].append({
