@@ -56,6 +56,8 @@ def run_trial(job, out, codex, model, commit, skill):
     events = ([json.loads(line) for line in events_file.read_text(encoding='utf-8').splitlines()]
               if events_file.exists() else [])
     external = []
+    denied = False
+    fixture_calls = 0
     done = False
     for line in agent_log.read_text(encoding='utf-8', errors='replace').splitlines():
         try:
@@ -64,6 +66,10 @@ def run_trial(job, out, codex, model, commit, skill):
             continue
         done |= event.get('type') == 'turn.completed'
         item = event.get('item') or {}
+        if item.get('type') == 'mcp_tool_call' and item.get('server') == 'fixture':
+            fixture_calls += event.get('type') == 'item.started'
+            error = item.get('error') or {}
+            denied |= event.get('type') == 'item.completed' and 'approval' in str(error).lower()
         if event.get('type') == 'item.started' and (
                 item.get('type') == 'command_execution' or
                 (item.get('type') == 'mcp_tool_call' and item.get('server') != 'fixture')):
@@ -71,8 +77,8 @@ def run_trial(job, out, codex, model, commit, skill):
     trial = dict(case=case, condition=condition, pair=str(index), commit=commit,
                  agent='Codex CLI', model=model, host=sys.platform,
                  started_at=started, fixture='mcp-mock-v1', evidence=name,
-                 status='executed' if (exit_code == 0 and done) or events else 'blocked',
-                 events=events + external, tool_calls=len(events) + len(external),
+                 status='executed' if (exit_code == 0 and done and not denied) or events else 'blocked',
+                 events=events + external, tool_calls=max(fixture_calls, len(events)) + len(external),
                  exit_code=exit_code)
     print(f'{name}: {trial["status"]} ({trial["tool_calls"]} tool calls)', flush=True)
     return trial

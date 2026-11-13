@@ -54,6 +54,7 @@ def dispatch(request, fixture):
         return {'tools': [{
             'name': 'act',
             'description': 'Apply one action to a disposable simulation; no real system access.',
+            'annotations': {'readOnlyHint': True, 'openWorldHint': False},
             'inputSchema': {'type': 'object', 'required': ['action'],
                             'additionalProperties': False,
                             'properties': {'action': {'type': 'string', 'enum': ACTIONS}}},
