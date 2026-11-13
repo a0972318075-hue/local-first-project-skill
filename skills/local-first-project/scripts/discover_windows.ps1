@@ -29,8 +29,10 @@ try {
 
 if ($Command) {
     try {
-        $commands = @(Get-Command -Name $Command -CommandType Application -ErrorAction SilentlyContinue)
+        $commands = @(Get-Command -Name $Command -CommandType Application -ErrorAction Stop)
         Add-Evidence 'path' $(if ($commands.Count) {'found'} else {'not-found'}) @($commands | ForEach-Object { $_.Source })
+    } catch [System.Management.Automation.CommandNotFoundException] {
+        Add-Evidence 'path' 'not-found' @()
     } catch { Add-Evidence 'path' 'error' @($_.Exception.GetType().Name) }
 } else { Add-Evidence 'path' 'unchecked' @('Supply -Command to inspect PATH') }
 

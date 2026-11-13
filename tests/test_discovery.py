@@ -52,6 +52,7 @@ class DiscoveryTests(unittest.TestCase):
         data = json.loads(result.stdout)
         self.assertEqual(data['status'], 'unknown')
         self.assertTrue(data['limitations'])
+        self.assertIn({'source': 'path', 'status': 'not-found', 'details': []}, data['evidence'])
 
     def test_rejects_wildcard_product(self):
         result = self.run_probe('-Product', '*')
