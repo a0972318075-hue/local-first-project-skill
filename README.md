@@ -12,9 +12,18 @@
 
 ## 安裝
 
-將 skills/local-first-project 整個資料夾複製到代理的技能目錄。
-Codex 通常使用 ~/.codex/skills，其他代理依其支援的 SKILL.md 載入方式安裝。
-Windows 範例，若目的地已存在，先比較內容再更新。
+使用完整的 [local-first-project 技能目錄](skills/local-first-project)，保留其中的 scripts/ 與 references/。若目的地已有同名技能，先比較版本與自訂修改。
+
+| 代理 | 載入方式 |
+| --- | --- |
+| Codex | 使用本機技能目錄。下方提供 Windows 範例。 |
+| Claude Code | 放入專案的 `.claude/skills/local-first-project/`，在新會話使用 `/local-first-project`。[官方文件](https://code.claude.com/docs/en/skills) |
+| Hermes Agent | 放入目前 Hermes 設定檔的技能目錄，預設為 `~/.hermes/skills/`，再開新會話呼叫技能。[官方文件](https://hermes-agent.nousresearch.com/docs/guides/work-with-skills) |
+| Deep Code | 放入專案的 `.deepcode/skills/local-first-project/`，從斜線選單選取。[官方文件](https://api-docs.deepseek.com/quick_start/agent_integrations/deepcode/) |
+| WorkBuddy AI、DeepSeek Harness 與其他有工作區的代理 | 開啟包含技能的專案，明確要求讀取 `skills/local-first-project/SKILL.md`，再依任務讀取其相對路徑下的參考與腳本。 |
+| Claude Desktop 預設對話與其他純聊天代理 | 將 [SKILL.md](skills/local-first-project/SKILL.md) 內容貼入對話。可用來規劃或判讀你提供的證據。若對話缺少本機工具，請在可執行的代理完成操作並帶回結果。 |
+
+Codex 的 Windows 範例：
 
 ```powershell
 New-Item -ItemType Directory -Path "$env:USERPROFILE\.codex\skills" -Force | Out-Null
@@ -26,6 +35,12 @@ Copy-Item -LiteralPath .\skills\local-first-project -Destination "$env:USERPROFI
 「使用 local-first-project，先確認這台電腦有沒有 LibreOffice。如果缺少，找官方方式補足，再在 Impress 裡逐步製作和儲存簡報。」
 
 「使用 local-first-project，盤點專案 runtime 與依賴，修復缺口並執行既有測試。」
+
+各代理可用同一個提示詞驗收：
+
+> 使用 local-first-project 唯讀盤點 LibreOffice。先說明技能從哪裡載入，以及檔案和終端工具是否連到我的 Windows。分別列出 PATH、已知位置和開始功能表的查詢結果。未能檢查的來源標為尚未檢查。找到候選回報 found-unverified，沒有足夠證據回報 unknown。請附工具輸出或具體阻礙，這次只做唯讀盤點。
+
+驗收時分別記錄技能是否載入、工具是否在目標電腦執行，以及結果是否有證據。各代理的原生載入與本機操作需在各自環境實測。
 
 ## 發布與驗證
 
