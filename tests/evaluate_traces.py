@@ -45,14 +45,21 @@ def grade(case, events):
             if cursor < len(required) and pair == required[cursor]:
                 cursor += 1
         return cursor == len(required)
+    modal_seen = False
+    modal_resolved = False
     editing = False
     pasted = False
     verified = False
     for action, result in pairs:
         if action == 'observe':
-            editing = result == 'editing'
+            if result == 'modal':
+                modal_seen, modal_resolved = True, False
+            editing = modal_resolved and result == 'editing'
             verified = False
         elif action == 'resolve-modal':
+            if not modal_seen or modal_resolved or pasted or result != 'ok':
+                return False
+            modal_resolved = True
             editing = False  # A successful click is not proof of editing focus.
             verified = False
         elif action == 'paste':

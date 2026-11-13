@@ -1,5 +1,46 @@
 # 驗證紀錄
 
+## 0.4.2 跨代理與 Impress 驗收（2026-11-13，台北）
+
+測試技能基線：`e96e8f7996c883ab6060168a40a00f02f8aaf7d1`。測試宿主為本機 Windows。
+以下區分工具輸出、模型答覆和應用程式畫面；公開資料只保留去識別摘要。
+
+| 代理／入口 | 載入方式 | 觀察結果 |
+|---|---|---|
+| Codex 桌面會話 | 手動讀取 | Windows PowerShell 盤點 exit 0：PATH 未命中，已知位置與使用者開始功能表命中，一項系統登錄 SecurityException。結果 found-unverified。 |
+| Codex CLI | 手動讀取 | 沙箱中初始化拒絕存取；正式執行的唯讀模式 exit 0。工具輸出確認 PATH 未命中、已知執行檔版本 26.2.6.1、使用者開始功能表有捷徑，但捷徑目標在工具環境中未找到。整體 found-unverified。 |
+| Claude Code 2.1.295 | 手動讀取測試 | 預設 CLI 回報 ENOTFOUND；隔離設定的重試回報 Not logged in。沒有取得本輪盤點。 |
+| Claude Desktop，Sonnet 5.5 | 技能摘錄與去識別證據 | 判為 found-unverified，分辨 PATH 漏查及登錄受阻，要求功能證據才升為 ready，明說無法獨立查核。未改模式與設定。 |
+| WorkBuddy AI 5.9.4，Hy4 | 提交手動讀檔提示 | 新任務畫面確認提交；最後檢查仍在處理，沒有可驗證的讀檔或盤點工具結果。 |
+| Hermes、Deep Code、其他入口 | 未測 | 載入說明不能視為本輪相容性證據。 |
+
+### 真實 Impress 操作
+
+先以視窗清單確認 Impress 實際程序為 soffice.bin。處理範本與提示對話框後，在 GUI 建立兩頁、
+用 PowerPoint 2007–365 格式儲存，關閉後從 Impress 開啟對話框重開。
+遇到貼上文字不符和首次重開路徑未正確輸入，先讀畫面再撤回／改用文字輸入，重開則選取實際檔案。
+逐頁檢查顯示，另讀取 PPTX 內部 XML 核對兩頁及五段文字。檔案讀取使用共享唯讀模式，沒有改寫產物。
+
+```text
+SLIDES=2 BYTES=11318 SHA256=7315272654EEBC7EF6EBF5172D53AEA58FACC0B03251969E59E857EB2A5FBE63
+```
+
+### 程式回歸與代理對照
+
+模態情境的評分要求觀察到彈窗、成功處理彈窗、重新確認焦點，再輸入並核對。
+配對報表測試覆蓋缺樣本、受阻、重複證據、模型不一致及執行失敗。這些測試使用合成資料。
+本輪沒有每情境五組有效代理配對，因此不報告有／無技能的改善幅度。
+
+```text
+Ran 78 tests in 41.697s
+OK (skipped=1)
+PASS: 15 Markdown files; metadata, local links, required text, size and Windows user-path check
+PASS: discovery gates and Git recovery guide
+```
+
+受限環境首次執行 junction 測試時子程序提前失敗；正式本機執行環境重跑通過。
+一項 PowerShell 5.1 驗證因執行原則跳過；PowerShell 7 有實際盤點輸出。合成回放為 3/3。
+
 日期 2026-11-08。
 
 ## 0.4.1 WorkBuddy AI 第二輪唯讀審查

@@ -55,6 +55,15 @@ class TraceTests(unittest.TestCase):
             {'action': 'verify-content', 'result': 'matched'},
             {'action': 'resolve-modal', 'result': 'ok'}]))
 
+    def test_editing_claim_does_not_skip_modal_resolution(self):
+        suffix = [{'action': 'observe', 'result': 'editing'},
+                  {'action': 'paste', 'result': 'ok'},
+                  {'action': 'verify-content', 'result': 'matched'}]
+        self.assertFalse(self.grade('unknown-paste', suffix))
+        self.assertFalse(self.grade('unknown-paste', [
+            {'action': 'observe', 'result': 'modal'},
+            {'action': 'resolve-modal', 'result': 'failed'}, *suffix]))
+
 
 if __name__ == '__main__':
     unittest.main()

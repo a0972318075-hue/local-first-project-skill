@@ -69,7 +69,8 @@ class DiscoveryTests(unittest.TestCase):
                 result = self.run_probe(*args)
                 self.assertNotEqual(result.returncode, 0, result.stdout)
                 self.assertFalse(result.stdout.strip())
-                self.assertIn(parameter.encode('ascii'), result.stderr)
+                self.assertIn(f"Cannot validate argument on parameter '{parameter}'".encode('ascii'),
+                              result.stderr)
                 self.assertIn(pattern_start, result.stderr)
 
 

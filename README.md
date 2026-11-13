@@ -1,6 +1,6 @@
 # Local-first Project Skill
 
-目前版本：**0.4.1**。
+目前版本：**0.4.2**。
 
 讓 AI 代理先認識本機環境，主動補足缺少的軟體與依賴，再完成並驗證專案。
 
@@ -41,6 +41,7 @@ Copy-Item -LiteralPath .\skills\local-first-project -Destination "$env:USERPROFI
 > 使用 local-first-project 唯讀盤點 LibreOffice。先說明技能從哪裡載入，以及檔案和終端工具是否連到我的 Windows。分別列出 PATH、已知位置和開始功能表的查詢結果。未能檢查的來源標為尚未檢查。找到候選回報 found-unverified，沒有足夠證據回報 unknown。請附工具輸出或具體阻礙，這次只做唯讀盤點。
 
 驗收時分別記錄技能是否載入、工具是否在目標電腦執行，以及結果是否有證據。各代理的原生載入與本機操作需在各自環境實測。
+記錄格式、配對比較與跨代理證據見 [驗收情境](tests/scenarios.md) 和 [驗證紀錄](tests/RESULTS.md)。
 
 ## 發布與驗證
 
@@ -102,3 +103,9 @@ action_result.py 直接分類 agent-desktop 動作回應；元素值驗證不再
 
 純計畫檢查可重驗已有執行紀錄和產物的清單；實際執行仍拒絕重播或覆寫既有產物。
 無效工作目錄回報輸入錯誤；不支援的 Python 版本有獨立狀態與結束碼。
+
+## 0.4.2 跨代理驗收與 Impress 實測
+
+固定測試版本、代理、工具宿主、載入方式和原始證據；比較工具區分已執行、受阻與缺樣本。
+以 LibreOffice Impress 介面建立、儲存、關閉及重開兩頁 PPTX；另核對檔案文字與雜湊。
+桌面證據只適用於已測試的 Windows 宿主與應用，不代表所有代理都能操作同一台電腦。
