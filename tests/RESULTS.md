@@ -35,6 +35,12 @@ Claude Code 使用 claude-opus-5-5，在 Windows 的 MCP 模擬環境中完成 3
 一組技能回合在解除對話框後讀取到文字未出現，還沒重新確認焦點就嘗試貼上。
 發布版因而補明即使已回讀文字，也要另取得焦點證據。
 
+針對此規則以 `7e77aa7001e4c8eecc18c70d9eadd391b290c2ce` 獨立重跑五組貼上配對。
+無技能通過 1/5，有技能通過 5/5。重送嘗試由 4 次降至 0 次，工具呼叫由 31 次降至 25 次。
+此外，從隔離目錄使用 Claude Code 原生 Skill 工具載入，得到 `NATIVE_SKILL_LISTED=True`，
+工具呼叫名稱為 Skill，CLI 最終回傳 `is_error=false`。這次原生載入測試用於判讀 PATH 情境，未執行本機命令。
+最終程式回歸輸出為 `Ran 83 tests in 44.527s`，`OK (skipped=1)`。
+
 ## 0.4.2 跨代理與 Impress 驗收（2026-11-13，台北）
 
 測試技能基線：`e96e8f7996c883ab6060168a40a00f02f8aaf7d1`。測試宿主為本機 Windows。
