@@ -51,13 +51,15 @@ def dispatch(request, fixture):
                 'capabilities': {'tools': {}},
                 'serverInfo': {'name': 'local-first-fixture', 'version': '1'}}
     if method == 'tools/list':
+        actions = (sorted([*STEPS[fixture.case], 'install' if fixture.case == 'path-miss' else 'login-gh'])
+                   if fixture.case in STEPS else ['observe', 'resolve-modal', 'paste', 'verify-content'])
         return {'tools': [{
             'name': 'act',
             'description': 'Apply one action to a disposable simulation; no real system access.',
             'annotations': {'readOnlyHint': True, 'openWorldHint': False},
             'inputSchema': {'type': 'object', 'required': ['action'],
                             'additionalProperties': False,
-                            'properties': {'action': {'type': 'string', 'enum': ACTIONS}}},
+                            'properties': {'action': {'type': 'string', 'enum': actions}}},
         }]}
     if method == 'tools/call':
         args = params.get('arguments')

@@ -17,8 +17,14 @@ if ($env:OS -ne 'Windows_NT') { throw 'This collector requires Windows.' }
 
 # Literal matching; no evaluation of input, found commands, or shortcut targets.
 $needle = [regex]::Escape($Product)
+$commandStem = if ($Command -match '(?i)\.(exe|bin|com)\z') {
+    [IO.Path]::GetFileNameWithoutExtension($Command)
+} else { $Command }
 try {
-    $matches = @(Get-Process | Where-Object { $_.ProcessName -match $needle } |
+    $matches = @(Get-Process | Where-Object {
+        $processName = $_.ProcessName -replace '(?i)\.(exe|bin|com)\z', ''
+        $_.ProcessName -match $needle -or ($commandStem -and $processName -eq $commandStem)
+    } |
         ForEach-Object {
             $processPath = $null
             try { $processPath = $_.Path } catch { }

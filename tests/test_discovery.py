@@ -46,6 +46,16 @@ class DiscoveryTests(unittest.TestCase):
         self.assertTrue(any(e['source'] == 'known-path' and e['status'] == 'found'
                             for e in data['evidence']))
 
+    def test_running_command_matches_even_if_product_label_differs(self):
+        result = self.run_probe('-Product', 'UnrelatedDisplayLabel',
+                                '-Command', Path(os.sys.executable).name)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        process = next(e for e in json.loads(result.stdout)['evidence']
+                       if e['source'] == 'process')
+        self.assertEqual(process['status'], 'found', process)
+        self.assertTrue(any(p['name'].casefold() == Path(os.sys.executable).stem.casefold()
+                            for p in process['details']))
+
     def test_unmatched_product_is_unknown_not_missing(self):
         result = self.run_probe('-Product', 'NoSuchProduct_7b965', '-Command', 'NoSuchBinary_7b965')
         self.assertEqual(result.returncode, 0, result.stderr)

@@ -24,7 +24,7 @@ def git(*args):
     return subprocess.check_output(['git', *args], cwd=ROOT)
 
 
-def run_trial(job, out, codex, model, commit, skill):
+def run_trial(job, out, executable, agent, model, commit, skill):
     case, index, condition = job
     name = f'{case}-{index}-{condition}'
     events_file = out / f'{name}.events.jsonl'
@@ -41,15 +41,26 @@ def run_trial(job, out, codex, model, commit, skill):
     if condition == 'skill':
         prompt += '\n\nFollow this skill (manual text load):\n' + skill
     started = datetime.now(timezone.utc).isoformat()
-    command = [codex, 'exec', '--ephemeral', '--skip-git-repo-check',
-               '--sandbox', 'read-only', '--json', '--cd', str(scratch),
-               '-m', model, '-c', 'project_doc_max_bytes=0',
-               '-c', 'mcp_servers={fixture={command=' + json.dumps(sys.executable)
-               + ',args=' + json.dumps(mcp_args) + '}}', '-']
+    if agent == 'claude':
+        config = scratch / 'fixture.json'
+        config.write_text(json.dumps({'mcpServers': {
+            'fixture': {'command': sys.executable, 'args': mcp_args},
+        }}), encoding='utf-8')
+        command = [executable, '-p', '--setting-sources', 'user', '--strict-mcp-config',
+                   '--mcp-config', str(config), '--tools', '',
+                   '--allowedTools', 'mcp__fixture__act', '--no-session-persistence',
+                   '--model', model, '--max-turns', '15', '--output-format', 'stream-json',
+                   '--verbose']
+    else:
+        command = [executable, 'exec', '--ephemeral', '--skip-git-repo-check',
+                   '--sandbox', 'read-only', '--json', '--cd', str(scratch),
+                   '-m', model, '-c', 'project_doc_max_bytes=0',
+                   '-c', 'mcp_servers={fixture={command=' + json.dumps(sys.executable)
+                   + ',args=' + json.dumps(mcp_args) + '}}', '-']
     with agent_log.open('xb') as output, error_log.open('xb') as errors:
         try:
             run = subprocess.run(command, input=prompt.encode('utf-8'),
-                                 stdout=output, stderr=errors, timeout=150)
+                                 stdout=output, stderr=errors, timeout=150, cwd=scratch)
             exit_code = run.returncode
         except subprocess.TimeoutExpired:
             exit_code = None
@@ -64,6 +75,17 @@ def run_trial(job, out, codex, model, commit, skill):
             event = json.loads(line)
         except ValueError:
             continue
+        if agent == 'claude':
+            done |= event.get('type') == 'result' and event.get('is_error') is False
+            if event.get('type') == 'assistant':
+                for call in (event.get('message') or {}).get('content', []):
+                    if call.get('type') != 'tool_use':
+                        continue
+                    if call.get('name') == 'mcp__fixture__act':
+                        fixture_calls += 1
+                    else:
+                        external.append({'action': 'out-of-scope-tool', 'result': 'attempted'})
+            continue
         done |= event.get('type') == 'turn.completed'
         item = event.get('item') or {}
         if item.get('type') == 'mcp_tool_call' and item.get('server') == 'fixture':
@@ -75,9 +97,11 @@ def run_trial(job, out, codex, model, commit, skill):
                 (item.get('type') == 'mcp_tool_call' and item.get('server') != 'fixture')):
             external.append({'action': 'out-of-scope-tool', 'result': 'attempted'})
     trial = dict(case=case, condition=condition, pair=str(index), commit=commit,
-                 agent='Codex CLI', model=model, host=sys.platform,
-                 started_at=started, fixture='mcp-mock-v1', evidence=name,
-                 status='executed' if (exit_code == 0 and done and not denied) or events else 'blocked',
+                 agent={'codex': 'Codex CLI', 'claude': 'Claude Code'}[agent],
+                 model=model, host=sys.platform,
+                 started_at=started, fixture='mcp-mock-v2', evidence=name,
+                 status='executed' if exit_code == 0 and done and not denied
+                 and (not fixture_calls or events) else 'blocked',
                  events=events + external, tool_calls=max(fixture_calls, len(events)) + len(external),
                  exit_code=exit_code)
     print(f'{name}: {trial["status"]} ({trial["tool_calls"]} tool calls)', flush=True)
@@ -86,13 +110,15 @@ def run_trial(job, out, codex, model, commit, skill):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--agent', choices=('codex', 'claude'), default='codex')
+    parser.add_argument('--executable', help='path to an installed agent if absent from PATH')
     parser.add_argument('--model', required=True)
     parser.add_argument('--pairs', type=int, choices=range(1, MIN_PAIRS + 1), default=MIN_PAIRS)
     parser.add_argument('--workers', type=int, choices=range(1, 5), default=3)
     args = parser.parse_args()
-    codex = shutil.which('codex')
-    if not codex:
-        parser.error('codex is not on PATH')
+    executable = shutil.which(args.executable or args.agent)
+    if not executable:
+        parser.error('agent executable not found')
     if git('status', '--porcelain'):
         parser.error('benchmark requires a clean worktree')
     commit = git('rev-parse', 'HEAD').decode().strip()
@@ -104,7 +130,8 @@ def main():
             for c in (CONDITIONS if i % 2 else CONDITIONS[::-1])]
     print(out, flush=True)
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        for trial in pool.map(lambda j: run_trial(j, out, codex, args.model, commit, skill), jobs):
+        for trial in pool.map(lambda j: run_trial(
+                j, out, executable, args.agent, args.model, commit, skill), jobs):
             manifest['trials'].append(trial)
             (out / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
     result = compare(manifest)
