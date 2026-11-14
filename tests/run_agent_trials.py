@@ -113,6 +113,7 @@ def main():
     parser.add_argument('--agent', choices=('codex', 'claude'), default='codex')
     parser.add_argument('--executable', help='path to an installed agent if absent from PATH')
     parser.add_argument('--model', required=True)
+    parser.add_argument('--case', choices=CASES, help='run one scenario for a focused retest')
     parser.add_argument('--pairs', type=int, choices=range(1, MIN_PAIRS + 1), default=MIN_PAIRS)
     parser.add_argument('--workers', type=int, choices=range(1, 5), default=3)
     args = parser.parse_args()
@@ -126,7 +127,8 @@ def main():
     out = ROOT / '.runs' / datetime.now(timezone.utc).strftime('agent-trials-%Y%m%dT%H%M%S%fZ')
     out.mkdir(parents=True)
     manifest = dict(origin='agent', skill_sha256=hashlib.sha256(skill.encode()).hexdigest(), trials=[])
-    jobs = [(case, i, c) for i in range(1, args.pairs + 1) for case in CASES
+    cases = (args.case,) if args.case else CASES
+    jobs = [(case, i, c) for i in range(1, args.pairs + 1) for case in cases
             for c in (CONDITIONS if i % 2 else CONDITIONS[::-1])]
     print(out, flush=True)
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
@@ -137,7 +139,7 @@ def main():
     result = compare(manifest)
     (out / 'report.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
     print(json.dumps(result), flush=True)
-    return 0 if result['coverage_met'] else 1
+    return 0 if all(result['cases'][case]['completed_pairs'] >= MIN_PAIRS for case in cases) else 1
 
 
 if __name__ == '__main__':

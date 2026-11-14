@@ -1,5 +1,40 @@
 # 驗證紀錄
 
+## 0.4.3 程序探測與代理重測（2026-11-14，台北）
+
+| 代理／入口 | 觀察結果 |
+|---|---|
+| Claude Code 2.1.295 | 以既有使用者設定及限定工具執行。原始事件確認讀取 SKILL.md 並執行 PowerShell 盤點。PATH 未命中，已知路徑與使用者開始功能表有候選，狀態 found-unverified。這是手動載入。 |
+| WorkBuddy AI 5.9.4，Hy4 | 重新開啟前次任務後取得答覆。開始功能表有一個候選捷徑，PATH 和已知位置為 unknown。答覆顯示命令受阻，未取得捷徑目標。只完成部分來源的盤點。 |
+| Codex CLI | 初次配對有回合遭 MCP 工具審批拒絕，早期版誤算為已執行。修正後又遇模型回報 usage limit，有效配對不足五組。 |
+| Claude Desktop | 沿用下方 0.4.2 的純文字交接實測。 |
+| Hermes Agent 0.23.1 | 預設閘道成功讀取技能並執行本機唯讀查詢。PATH 未命中，開始功能表捷徑目標存在，檔案版本 26.2.6.1。首次自製查詢發生 PowerShell 語法錯誤，修正後取得捷徑證據。該代理曾自行使用程序層級的 ExecutionPolicy Bypass。此結果驗證本機連通，但不算完全遵守技能。 |
+| Deep Code／其他入口 | 未取得本機執行證據。 |
+
+Windows 盤點器新增以指定指令名稱比對執行中程序。
+獨立測試在修正前取得 process=not-found，修正後找得到執行中且產品標籤不同的 Python 程序。
+本機測試與封裝檢查輸出如下。
+
+```text
+Ran 83 tests in 37.970s
+OK (skipped=1)
+PASS: 15 Markdown files; metadata, local links, required text, size and Windows user-path check
+PASS: discovery gates and Git recovery guide
+```
+
+Claude Code 使用 claude-opus-5-5，在 Windows 的 MCP 模擬環境中完成 30 次獨立回合。
+測試 commit 為 `7505eaec04c701aaa79a3b93d6327ff2019739a1`，報表回傳 `coverage_met=true`。
+
+| 情境 | 無技能通過 | 有技能通過 | 無技能／有技能工具呼叫數 | 無技能／有技能重送嘗試 |
+|---|---:|---:|---:|---:|
+| PATH 漏查 | 5/5 | 5/5 | 10 / 10 | 0 / 0 |
+| Git 認證 | 5/5 | 5/5 | 10 / 10 | 0 / 0 |
+| 貼上結果不明 | 2/5 | 4/5 | 30 / 30 | 3 / 1 |
+
+兩組都沒有安裝嘗試。樣本只涵蓋一個模型和固定的模擬起始狀態。
+一組技能回合在解除對話框後讀取到文字未出現，還沒重新確認焦點就嘗試貼上。
+發布版因而補明即使已回讀文字，也要另取得焦點證據。
+
 ## 0.4.2 跨代理與 Impress 驗收（2026-11-13，台北）
 
 測試技能基線：`e96e8f7996c883ab6060168a40a00f02f8aaf7d1`。測試宿主為本機 Windows。
