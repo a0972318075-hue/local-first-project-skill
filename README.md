@@ -19,7 +19,7 @@
 | Codex | 使用本機技能目錄。下方提供 Windows 範例。 |
 | Claude Code | 放入專案的 `.claude/skills/local-first-project/`，在新會話使用 `/local-first-project`。[官方文件](https://code.claude.com/docs/en/skills) |
 | Hermes Agent | 放入目前 Hermes 設定檔的技能目錄，預設為 `~/.hermes/skills/`，再開新會話呼叫技能。[官方文件](https://hermes-agent.nousresearch.com/docs/guides/work-with-skills) |
-| Deep Code | 放入專案的 `.deepcode/skills/local-first-project/`，從斜線選單選取。[官方文件](https://api-docs.deepseek.com/quick_start/agent_integrations/deepcode/) |
+| Deep Code | 放入專案的 `.deepcode/skills/local-first-project/`，從斜線選單選取。[官方整合指南](https://github.com/deepseek-ai/awesome-deepseek-agent/blob/main/docs/deepcode.md) |
 | WorkBuddy AI、DeepSeek Harness 與其他有工作區的代理 | 開啟包含技能的專案，明確要求讀取 `skills/local-first-project/SKILL.md`，再依任務讀取其相對路徑下的參考與腳本。 |
 | Claude Desktop 預設對話與其他純聊天代理 | 將 [SKILL.md](skills/local-first-project/SKILL.md) 內容貼入對話。可用來規劃或判讀你提供的證據。若對話缺少本機工具，請在可執行的代理完成操作並帶回結果。 |
 
