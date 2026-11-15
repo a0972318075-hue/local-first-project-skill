@@ -1,5 +1,6 @@
 """Verify that a local trial manifest agrees with its raw tool evidence."""
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -79,16 +80,48 @@ def add_result(calls, finished, started, identifier, content):
     calls.append((started[identifier], text_result(content)))
 
 
-def verify(manifest_path):
+def terminal_success(events, agent):
+    if agent == 'Codex CLI':
+        outcomes = [event['type'] for event in events
+                    if event['type'] in ('turn.completed', 'turn.failed')]
+        return bool(outcomes) and outcomes[-1] == 'turn.completed'
+    if agent == 'Claude Code':
+        outcomes = [event for event in events if event['type'] == 'result']
+        return bool(outcomes) and outcomes[-1].get('is_error') is False
+    raise ValueError(f'unsupported agent: {agent}')
+
+
+def release_failures(summary):
+    failures = []
+    if not summary['coverage_met']:
+        failures.append('paired coverage is incomplete')
+    for case, result in summary['cases'].items():
+        skill = result['skill']
+        if skill['blocked'] or not skill['executed'] or skill['passed'] != skill['executed']:
+            failures.append(f'{case}: skill did not pass every trial')
+    return failures
+
+
+def verify(manifest_path, skill_path=None):
     data = load_json(manifest_path.read_text(encoding='utf-8'))
     summary = compare(data)
+    if skill_path is not None:
+        skill_text = skill_path.read_text(encoding='utf-8')
+        digest = hashlib.sha256(skill_text.encode('utf-8')).hexdigest()
+        if data.get('skill_sha256') != digest:
+            raise ValueError('manifest skill digest differs from release skill')
+        provenance = {(row['commit'], row['agent'], row['model'], row['host'], row['fixture'])
+                      for row in data['trials']}
+        if len(provenance) != 1:
+            raise ValueError('release requires one consistent agent and benchmark environment')
     for trial in data['trials']:
         name = trial['evidence']
         if not re.fullmatch(r'[a-z0-9-]+', name):
             raise ValueError('invalid local evidence name')
         agent_path = manifest_path.with_name(f'{name}.agent.jsonl')
         try:
-            calls, attempts, external = transcript(records(agent_path), trial['agent'])
+            agent_events = records(agent_path)
+            calls, attempts, external = transcript(agent_events, trial['agent'])
             path = manifest_path.with_name(f'{name}.events.jsonl')
             events = records(path) if path.exists() else []
             audit(events, calls)
@@ -96,8 +129,11 @@ def verify(manifest_path):
                 raise ValueError('manifest events do not match raw evidence')
             if trial['tool_calls'] != attempts + external:
                 raise ValueError('manifest tool call count does not match transcript')
-            if trial['status'] == 'executed' and attempts != len(calls):
-                raise ValueError('executed trial has incomplete tool calls')
+            if trial['status'] == 'executed':
+                if attempts != len(calls):
+                    raise ValueError('executed trial has incomplete tool calls')
+                if trial.get('exit_code') != 0 or not terminal_success(agent_events, trial['agent']):
+                    raise ValueError('executed trial is missing a successful agent exit')
         except (OSError, ValueError, TypeError, KeyError, AttributeError) as error:
             raise ValueError(f'{name}: {error}') from error
     return {'verified_trials': len(data['trials']), **summary}
@@ -106,10 +142,16 @@ def verify(manifest_path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('manifest', type=Path)
+    parser.add_argument('--release-skill', type=Path,
+                        help='require full coverage and passing trials for this skill file')
     args = parser.parse_args()
     try:
-        print(json.dumps(verify(args.manifest)))
-        return 0
+        report = verify(args.manifest, args.release_skill)
+        if args.release_skill:
+            report['release_failures'] = release_failures(report)
+            report['release_passed'] = not report['release_failures']
+        print(json.dumps(report))
+        return 2 if report.get('release_passed') is False else 0
     except (OSError, ValueError, TypeError, KeyError) as error:
         print(json.dumps({'error': str(error)}))
         return 1

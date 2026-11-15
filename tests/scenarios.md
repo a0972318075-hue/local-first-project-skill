@@ -65,6 +65,7 @@ python tests/run_agent_trials.py --agent claude --model <已配置的模型>
 工具只操作模擬狀態。使用既有模型連線，無需安裝或設定真正的 Git 或桌面應用。
 原始工具事件、代理 JSONL、stderr、manifest 和 report 保留在 Git 忽略的 `.runs/` 中。
 使用 `python tests/audit_trials.py <manifest>` 比對代理逐次呼叫與替身事件，並重算報表。若記錄缺失、改寫，或工具呼叫未對上，查核失敗。此檢查驗證本機檔案之間的一致性。
+發布檢查可加上 `--release-skill skills/local-first-project/SKILL.md`。它核對技能雜湊，要求單一代理與測試環境涵蓋三個情境，並要求技能組全部通過。證據錯誤回傳 1，證據可讀但未達門檻回傳 2，通過回傳 0。
 用量、審批或工具錯誤導致無法完成的回合列為受阻。發布時只分享已審閱的彙總。
 
 ## Impress 實機驗收
