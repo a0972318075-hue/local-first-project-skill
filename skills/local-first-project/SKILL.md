@@ -34,6 +34,7 @@ description: "Use when completing a project depends on local software, runtimes,
 Windows 細節與必填證據表見 [本機發現](references/discovery.md)。在報告缺少工具或要求使用者補設定前，完成與任務相關的證據表；未檢查的來源明記尚未檢查。
 需要結構化盤點或中斷後接續時，使用 [可執行工具與檢查點](references/execution.md)。Windows 盤點器只讀取候選證據；任務檢查器核對 GUI 契約與未知結果，兩者均不自動安裝或執行操作。
 涉及 Git 提交或 GitHub 發布時，讀取 [Git 環境診斷](references/git.md)，分別檢查安裝、執行、設定、登入、權限與功能。
+若瀏覽器已登入而 gh 未登入，先查 Git 的有效憑證輔助程式，再對已核對的遠端執行唯讀驗證。兩項證據各自記錄，遠端可讀只證明讀取權限。
 
 狀態採 found-unverified、ready、missing-after-search、unknown、blocked。ready 必須有真實功能測試。
 

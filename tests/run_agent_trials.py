@@ -101,7 +101,7 @@ def run_trial(job, out, executable, agent, model, commit, skill):
                  model=model, host=sys.platform,
                  started_at=started, fixture='mcp-mock-v2', evidence=name,
                  status='executed' if exit_code == 0 and done and not denied
-                 and (not fixture_calls or events) else 'blocked',
+                 and fixture_calls == len(events) else 'blocked',
                  events=events + external, tool_calls=max(fixture_calls, len(events)) + len(external),
                  exit_code=exit_code)
     print(f'{name}: {trial["status"]} ({trial["tool_calls"]} tool calls)', flush=True)
