@@ -37,6 +37,18 @@ origin 是呼叫端標記，評分器無法證明紀錄真實性。公開前刪�
 跨代理相容性分別驗證原生載入、手動讀檔、純文字交接；純文字結果不能填入本機操作欄。
 以相同唯讀 LibreOffice 提示詞核對 PATH、已知位置與開始功能表，不啟動、不安裝、不修改設定。
 
+### 一次性本機讀檔驗收
+
+在目標電腦的 Git 忽略目錄建立新測試檔，將建立指令輸出的路徑交給代理。
+
+```text
+python tests/host_probe.py create .runs/host-challenge.txt
+python tests/host_probe.py verify .runs/host-challenge.txt
+```
+
+部署者先建立 `.runs/`，每次指定全新的檔名。只提供檔案路徑。要求代理用現有本機檔案或終端工具讀取單行內容，回覆包含 `nonce` 與 `route: local-file` 的 JSON，並保留呼叫的工具紀錄。將回覆 JSON 傳到 verify 的標準輸入。比對成功回傳 0，不符回傳 1，格式或檔案錯誤回傳 2。
+成功表示取得這次的測試值。報告仍需核對工具紀錄、工作區及是否經人工上傳。測試檔不得含個資或憑證，且各代理使用不同檔案。
+
 ## 配對報表
 
 執行 `python tests/compare_trials.py <manifest>`。頂層為 `origin=agent` 及 `trials` 陣列。

@@ -1,5 +1,22 @@
 # 驗證紀錄
 
+## 0.4.6 本機工具宿主驗收
+
+一次性讀檔驗收以不同測試檔核對各代理。檔案路徑隨提示提供，測試值只存在於目標電腦的檔案。Windows 控制組的結果為 `matched`，讀取另一個測試檔的收據為 `unverified`。
+
+| 入口 | 視窗與工具證據 | 結果 |
+|---|---|---|
+| WorkBuddy AI，MiniMax-M3.1-Flash | 既有對話顯示 PowerShell 與 Bash 的 where.exe 查詢均為 exit 1，Get-Command 無命中。Windows 獨立重查亦為 exit 1，且已知執行檔及使用者開始功能表捷徑均存在。代理回報以 Read 和 Bash 讀取一次性測試檔。 | 收據 `matched`，確認該工作階段能讀目標電腦上的本機檔案。PATH 未命中，LibreOffice 為 found-unverified。 |
+| Claude Desktop，Sonnet 5.5 | 原預設模式的 Read 卡片顯示失敗。代理回報工具連到 Linux 雲端工作區，無法讀取 Windows 路徑。 | JSON 收據為 unavailable，查核 exit 1。本機讀檔未驗證。 |
+| Deep Code | 本機 CLI 入口未取得。前次套件執行遭自動審批拒絕，原因是程序可能接觸既有 API 憑證。 | 未執行實機測試。 |
+
+技能主文雜湊未變。Codex CLI 與 Claude Code 各 30 回合的原始紀錄在本版重新查核，兩者均回報 `verified_trials=30`、`coverage_met=true`、`release_passed=true`。
+
+```text
+Ran 90 tests in 62.778s
+OK (skipped=1)
+```
+
 ## 0.4.5 發布驗收（2026-11-16，台北）
 
 發布模式核對當前技能文字的 SHA-256、執行完成訊號、各組原始工具紀錄，以及三個情境的配對與通過門檻。
