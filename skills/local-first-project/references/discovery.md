@@ -15,6 +15,13 @@
 不要使用 Win32_Product 作為例行清單，避免觸發 MSI 修復。
 不要掃描私人文件內容來找應用程式。
 
+## 向其他代理交接盤點結果
+
+先在目標 Windows 以可信工具執行隨附的盤點腳本，再把 JSON 標準輸出送入 `scripts/discovery_handoff.py`。
+這個工具只輸出 PATH、指定位置及開始功能表的狀態，並以這三項證據計算 `found-unverified` 或 `unknown`。
+只需把摘要交給獲准接收證據的代理，並另外說明產品名稱和需判讀的問題。
+接收方以 `reported-evidence` 記錄來源，保留未查與錯誤狀態。若要判定可用，由有權限的宿主另做一次功能驗證。
+
 ## macOS / Linux
 
 macOS 查已開視窗／程序、Applications 與使用者 Applications、PATH 和現有套件管理器。

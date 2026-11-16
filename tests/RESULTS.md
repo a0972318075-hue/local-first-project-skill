@@ -1,5 +1,20 @@
 # 驗證紀錄
 
+## 0.4.7 Windows 盤點交接
+
+以目標 Windows 的盤點腳本採集 LibreOffice 證據，再經隨附交接工具產生下列輸出。摘要只保留三種來源的狀態。
+
+```json
+{"route":"reported-evidence","status":"found-unverified","sources":{"path":"not-found","known-path":"found","start-menu":"found"}}
+```
+
+Claude Desktop 預設對話以 Sonnet 5.5 成功判讀該摘要，標出外部提供的證據、PATH 未命中與候選尚未驗證。
+它建議由 Windows 端再驗證版本。依技能規則，判定 ready 還需符合任務的最小功能測試。
+這次驗收通過的是文字交接。Claude Desktop 的 Windows 本機工具能力仍沿用 0.4.6 的未驗證結果。
+Deep Code CLI 本輪在 PATH 仍未找到，實機驗收未完成。
+
+既有 Codex 與 Claude Code 的隔離試驗再次通過技能主文的發布檢查，各為 30 回合。交接工具另有本機輸入及錯誤案例測試。
+
 ## 0.4.6 本機工具宿主驗收
 
 一次性讀檔驗收以不同測試檔核對各代理。檔案路徑隨提示提供，測試值只存在於目標電腦的檔案。Windows 控制組的結果為 `matched`，讀取另一個測試檔的收據為 `unverified`。

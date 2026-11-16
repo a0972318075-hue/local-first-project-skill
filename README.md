@@ -1,6 +1,6 @@
 # Local-first Project Skill
 
-目前版本：**0.4.6**。
+目前版本：**0.4.7**。
 
 讓 AI 代理先認識本機環境，主動補足缺少的軟體與依賴，再完成並驗證專案。
 
@@ -42,6 +42,7 @@ Copy-Item -LiteralPath .\skills\local-first-project -Destination "$env:USERPROFI
 
 驗收時分別記錄技能是否載入、工具是否在目標電腦執行，以及結果是否有證據。各代理的原生載入與本機操作需在各自環境實測。
 若主機是否相同仍不明，可使用 [一次性本機讀檔驗收](tests/scenarios.md#一次性本機讀檔驗收)。
+本機工具受限時可提供 [Windows 盤點交接摘要](skills/local-first-project/references/discovery.md#向其他代理交接盤點結果)。
 記錄格式、配對比較與跨代理證據見 [驗收情境](tests/scenarios.md) 和 [驗證紀錄](tests/RESULTS.md)。
 
 ## 發布與驗證
